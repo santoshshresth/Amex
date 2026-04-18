@@ -1,0 +1,2800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EVOASTRA | Explainable Credit Default Prediction</title>
+  <style>
+    :root{
+      --bg:#07101c;
+      --bg2:#0d1424;
+      --panel:rgba(255,255,255,.08);
+      --panel2:rgba(255,255,255,.05);
+      --line:rgba(255,255,255,.11);
+      --text:#f8fafc;
+      --muted:rgba(248,250,252,.72);
+      --cyan:#00F5FF;
+      --violet:#7B61FF;
+      --green:#14F195;
+      --amber:#FFC857;
+      --red:#FF5E7A;
+      --shadow:0 24px 60px rgba(0,0,0,.35);
+      --radius:24px;
+      --radius2:18px;
+      --sidebar:310px;
+      --topbar:74px;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      color:var(--text);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:
+        radial-gradient(circle at 10% 10%, rgba(0,245,255,.12), transparent 24%),
+        radial-gradient(circle at 92% 10%, rgba(123,97,255,.14), transparent 30%),
+        radial-gradient(circle at 50% 92%, rgba(20,241,149,.10), transparent 22%),
+        linear-gradient(180deg,#060d18 0%, #0a1220 45%, #0f1827 100%);
+      overflow-x:hidden;
+    }
+
+    body::before{
+      content:"EVOASTRA LABS";
+      position:fixed;
+      top:18%;
+      right:-120px;
+      transform:rotate(-90deg);
+      font-size:clamp(52px,9vw,148px);
+      font-weight:900;
+      letter-spacing:.24em;
+      color:rgba(255,255,255,.03);
+      pointer-events:none;
+      z-index:0;
+      user-select:none;
+      white-space:nowrap;
+    }
+
+    body::after{
+      content:"";
+      position:fixed;
+      inset:0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.028) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px);
+      background-size:52px 52px;
+      mask-image:radial-gradient(circle at center, rgba(0,0,0,.92), transparent 80%);
+      opacity:.45;
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .particles,.network{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .cursor-glow{
+      position:fixed;
+      width:240px;
+      height:240px;
+      border-radius:50%;
+      pointer-events:none;
+      transform:translate(-50%,-50%);
+      background:radial-gradient(circle, rgba(0,245,255,.18), rgba(123,97,255,.08), transparent 72%);
+      filter:blur(14px);
+      z-index:1;
+      mix-blend-mode:screen;
+    }
+
+    .app{
+      position:relative;
+      z-index:2;
+      display:grid;
+      grid-template-columns:var(--sidebar) 1fr;
+      min-height:100vh;
+    }
+
+    .sidebar{
+      position:sticky;
+      top:0;
+      height:100vh;
+      padding:18px;
+      background:rgba(7,16,28,.72);
+      border-right:1px solid rgba(255,255,255,.08);
+      backdrop-filter:blur(24px) saturate(140%);
+      -webkit-backdrop-filter:blur(24px) saturate(140%);
+      overflow:auto;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      padding:14px;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.1);
+      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
+      position:relative;
+      overflow:hidden;
+      margin-bottom:18px;
+    }
+
+    .brand::after{
+      content:"";
+      position:absolute;
+      left:-30%;
+      right:-30%;
+      bottom:0;
+      height:1px;
+      background:linear-gradient(90deg, transparent, rgba(0,245,255,.8), transparent);
+      animation:brandline 4.5s linear infinite;
+    }
+
+    @keyframes brandline{
+      from{transform:translateX(-50%)}
+      to{transform:translateX(60%)}
+    }
+
+    .brand-mark{
+      width:48px;
+      height:48px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(135deg, rgba(0,245,255,.20), rgba(123,97,255,.20), rgba(20,241,149,.12));
+      position:relative;
+      overflow:hidden;
+      flex:0 0 auto;
+    }
+
+    .brand-mark::before,.brand-mark::after{
+      content:"";
+      position:absolute;
+      inset:11px;
+      border:1px solid rgba(255,255,255,.18);
+      border-radius:11px;
+      transform:rotate(45deg);
+    }
+
+    .brand-title{font-size:16px;font-weight:900;letter-spacing:.22em}
+    .brand-sub{font-size:11px;color:var(--muted);letter-spacing:.16em;text-transform:uppercase;margin-top:4px}
+
+    .nav-list{display:grid;gap:8px}
+    .nav-btn{
+      width:100%;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:14px 16px;
+      border-radius:16px;
+      border:1px solid transparent;
+      background:transparent;
+      color:var(--muted);
+      cursor:pointer;
+      transition:.25s ease;
+      text-align:left;
+      font-size:14px;
+    }
+
+    .nav-btn:hover,.nav-btn.active{
+      color:#fff;
+      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      border-color:rgba(255,255,255,.10);
+      box-shadow:0 12px 28px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.12);
+    }
+
+    .nav-icon{
+      width:34px;height:34px;border-radius:12px;
+      display:grid;place-items:center;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      font-size:14px;
+      flex:0 0 auto;
+    }
+
+    .side-panel{
+      margin-top:18px;
+      padding:18px;
+      border-radius:22px;
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.12);
+    }
+
+    .side-panel h4,.side-panel p{margin:0}
+    .side-panel p{margin-top:10px;color:var(--muted);font-size:13px;line-height:1.65}
+
+    .progress-track,.bar,.severity,.road-fill{
+      height:12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.08);
+      overflow:hidden;
+    }
+
+    .progress-track span,.bar span,.severity span,.road-fill span{
+      display:block;
+      width:0;
+      height:100%;
+      background:linear-gradient(90deg,var(--cyan),var(--violet),var(--green));
+      box-shadow:0 0 24px rgba(0,245,255,.18);
+      transition:width .45s ease;
+    }
+
+    .side-stats{
+      margin-top:12px;
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .main{min-width:0;display:flex;flex-direction:column}
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:8;
+      height:var(--topbar);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:14px 24px;
+      background:rgba(7,16,28,.58);
+      border-bottom:1px solid rgba(255,255,255,.08);
+      backdrop-filter:blur(22px);
+      -webkit-backdrop-filter:blur(22px);
+    }
+
+    .left-tools,.right-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+    .chip,.btn,.ghost,.mobile-toggle,.dataset-link{
+      border:1px solid rgba(255,255,255,.10);
+      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      color:var(--text);
+      border-radius:16px;
+      min-height:46px;
+      padding:12px 16px;
+      cursor:pointer;
+      transition:.25s ease;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      box-shadow:0 10px 24px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.12);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .chip{
+      min-height:auto;
+      padding:8px 12px;
+      font-size:12px;
+      border-radius:999px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:var(--muted);
+      cursor:default;
+    }
+
+    .btn:hover,.ghost:hover,.mobile-toggle:hover,.dataset-link:hover{
+      transform:translateY(-1px);
+      border-color:rgba(0,245,255,.22);
+      box-shadow:0 14px 28px rgba(0,245,255,.10), inset 0 1px 0 rgba(255,255,255,.16);
+    }
+
+    .btn.primary{
+      background:linear-gradient(135deg, rgba(0,245,255,.18), rgba(123,97,255,.18));
+      font-weight:700;
+    }
+
+    .ghost{background:rgba(255,255,255,.035)}
+    .content{padding:24px;display:grid}
+    .view{display:none;animation:viewIn .45s ease}
+    .view.active{display:block}
+
+    @keyframes viewIn{
+      from{opacity:0;transform:translateY(18px)}
+      to{opacity:1;transform:none}
+    }
+
+    .glass{
+      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.12);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .glass::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(120deg, rgba(255,255,255,.10), transparent 18%, transparent 78%, rgba(255,255,255,.06));
+      pointer-events:none;
+    }
+
+    .glow::after{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      border-radius:inherit;
+      padding:1px;
+      background:linear-gradient(135deg, rgba(0,245,255,.55), rgba(123,97,255,.45), rgba(20,241,149,.45));
+      -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite:xor;
+      mask-composite:exclude;
+      opacity:.62;
+      pointer-events:none;
+    }
+
+    .hero{
+      min-height:calc(100vh - var(--topbar) - 48px);
+      display:grid;
+      align-items:center;
+    }
+
+    .hero-grid{
+      display:grid;
+      grid-template-columns:1.18fr .82fr;
+      gap:20px;
+      align-items:stretch;
+    }
+
+    .hero-card,.hero-visual{min-height:640px}
+    .hero-card{padding:34px}
+    .hero-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 14px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.05);
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:var(--muted);
+      margin-bottom:18px;
+    }
+
+    h1,h2,h3,h4,p{margin:0}
+    h1{
+      font-size:clamp(34px,4.5vw,64px);
+      line-height:1.04;
+      letter-spacing:-.04em;
+      max-width:960px;
+    }
+    h2{
+      font-size:clamp(28px,3vw,42px);
+      line-height:1.08;
+      letter-spacing:-.03em;
+    }
+    h3{font-size:20px;letter-spacing:-.02em}
+    h4{font-size:15px}
+    p{
+      color:var(--muted);
+      line-height:1.7;
+      font-size:15px;
+    }
+
+    .subtitle{
+      font-size:18px;
+      color:rgba(248,250,252,.84);
+      max-width:760px;
+      margin-top:18px;
+    }
+
+    .badge-row,.btn-row,.tag-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .badge-row{margin-top:20px}
+    .btn-row{margin-top:24px}
+
+    .badge{
+      padding:10px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.10);
+      font-size:12px;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+    }
+
+    .stats-grid{
+      margin-top:28px;
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:14px;
+    }
+
+    .stat{
+      padding:18px;
+      border-radius:18px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .stat::after{
+      content:"";
+      position:absolute;
+      left:-20%;
+      top:0;
+      width:48%;
+      height:1px;
+      background:linear-gradient(90deg, transparent, rgba(0,245,255,.95), transparent);
+      animation:flow 4.4s linear infinite;
+    }
+
+    @keyframes flow{
+      to{transform:translateX(260%)}
+    }
+
+    .stat-label{font-size:12px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase}
+    .stat-value{font-size:30px;font-weight:900;margin-top:10px;letter-spacing:-.04em}
+    .stat-note{font-size:13px;color:rgba(248,250,252,.76);margin-top:8px}
+
+    .hero-visual{
+      padding:24px;
+      position:relative;
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+    }
+
+    .orb{
+      position:absolute;
+      border-radius:50%;
+      filter:blur(18px);
+      opacity:.9;
+      pointer-events:none;
+    }
+    .orb.a{width:320px;height:320px;left:-80px;top:40px;background:radial-gradient(circle, rgba(0,245,255,.30), transparent 65%);animation:floaty 8s ease-in-out infinite}
+    .orb.b{width:360px;height:360px;right:-120px;top:120px;background:radial-gradient(circle, rgba(123,97,255,.28), transparent 65%);animation:floaty 11s ease-in-out infinite reverse}
+    .orb.c{width:220px;height:220px;right:12%;bottom:-40px;background:radial-gradient(circle, rgba(20,241,149,.20), transparent 65%);animation:floaty 9s ease-in-out infinite}
+
+    @keyframes floaty{
+      0%,100%{transform:translateY(0) scale(1)}
+      50%{transform:translateY(-18px) scale(1.04)}
+    }
+
+    .core-wrap{
+      position:relative;
+      width:min(540px,100%);
+      aspect-ratio:1/1;
+      display:grid;
+      place-items:center;
+    }
+
+    .ring{
+      position:absolute;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,.16);
+      box-shadow:inset 0 0 24px rgba(255,255,255,.06),0 0 28px rgba(0,245,255,.06);
+    }
+    .ring.r1{width:88%;height:88%;animation:spin 18s linear infinite}
+    .ring.r2{width:72%;height:72%;border-color:rgba(0,245,255,.26);animation:spinR 12s linear infinite}
+    .ring.r3{width:54%;height:54%;border-color:rgba(123,97,255,.28);animation:spin 8s linear infinite}
+    .ring.r4{width:36%;height:36%;border-color:rgba(20,241,149,.30);animation:pulseRing 3.2s ease-in-out infinite}
+
+    @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+    @keyframes spinR{from{transform:rotate(360deg)}to{transform:rotate(0)}}
+    @keyframes pulseRing{
+      0%,100%{transform:scale(1);opacity:.82}
+      50%{transform:scale(1.08);opacity:1}
+    }
+
+    .core{
+      width:38%;
+      aspect-ratio:1/1;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      text-align:center;
+      background:
+        radial-gradient(circle at 32% 30%, rgba(255,255,255,.5), transparent 18%),
+        radial-gradient(circle at center, rgba(0,245,255,.48), rgba(123,97,255,.26) 48%, rgba(11,18,32,.08) 72%, transparent 74%);
+      box-shadow:0 0 44px rgba(0,245,255,.26),0 0 90px rgba(123,97,255,.24);
+      z-index:2;
+    }
+
+    .core strong{font-size:38px;letter-spacing:.14em;text-shadow:0 0 18px rgba(255,255,255,.45)}
+
+    .cube{
+      position:absolute;
+      width:78px;height:78px;border-radius:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.14);
+      backdrop-filter:blur(16px);
+      box-shadow:0 18px 40px rgba(0,0,0,.22);
+    }
+
+    .cube::before{
+      content:"";
+      position:absolute;
+      inset:12px;
+      border:1px solid rgba(0,245,255,.28);
+      border-radius:12px;
+    }
+
+    .cube.c1{top:10%;left:8%;animation:cube 7s ease-in-out infinite}
+    .cube.c2{top:20%;right:8%;animation:cube 6.8s ease-in-out infinite reverse}
+    .cube.c3{bottom:12%;left:15%;animation:cube 8.2s ease-in-out infinite}
+    .cube.c4{bottom:10%;right:16%;animation:cube 7.2s ease-in-out infinite reverse}
+
+    @keyframes cube{
+      0%,100%{transform:translateY(0) rotate(0deg)}
+      50%{transform:translateY(-18px) rotate(8deg)}
+    }
+
+    .hud{
+      position:absolute;
+      inset:auto 0 0 0;
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+    }
+
+    .mini{
+      padding:14px;
+      border-radius:18px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      text-align:center;
+      backdrop-filter:blur(16px);
+    }
+
+    .mini strong{display:block;font-size:22px;letter-spacing:-.03em}
+    .mini span{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+
+    .section{margin-top:22px;display:grid;gap:18px}
+    .section-head{
+      display:flex;
+      align-items:end;
+      justify-content:space-between;
+      gap:18px;
+      flex-wrap:wrap;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:8px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.10);
+      font-size:12px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:var(--muted);
+      width:max-content;
+    }
+
+    .grid-2,.grid-3,.grid-4{
+      display:grid;
+      gap:18px;
+    }
+    .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+
+    .card{
+      padding:24px;
+      min-height:100%;
+      position:relative;
+    }
+
+    .kicker{
+      display:block;
+      margin-bottom:10px;
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:var(--cyan);
+    }
+
+    .feature-list{
+      margin:16px 0 0;
+      padding:0;
+      list-style:none;
+      display:grid;
+      gap:10px;
+    }
+
+    .feature-list li{
+      padding:10px 12px;
+      border-radius:14px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      color:rgba(248,250,252,.88);
+      font-size:14px;
+      line-height:1.45;
+    }
+
+    .long-card{
+      padding:26px;
+    }
+
+    .compare-wrap,.report-grid,.road-grid{
+      display:grid;
+      gap:18px;
+      align-items:start;
+    }
+
+    .compare-wrap{grid-template-columns:1fr 1fr}
+    .report-grid{grid-template-columns:1.05fr .95fr}
+    .road-grid{grid-template-columns:1.08fr .92fr}
+
+    .meter-stack{display:grid;gap:12px;margin-top:18px}
+    .meter{display:grid;gap:8px}
+    .meter label{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      font-size:13px;
+      color:rgba(248,250,252,.86);
+    }
+
+    .slider-card{padding:22px}
+    input[type="range"]{width:100%;accent-color:var(--cyan);cursor:pointer}
+    .slider-output{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns:1fr auto 1fr;
+      gap:10px;
+      align-items:center;
+    }
+    .slider-pill{
+      padding:14px 16px;
+      border-radius:18px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      text-align:center;
+      font-size:14px;
+      color:rgba(248,250,252,.88);
+    }
+    .dial{
+      width:72px;height:72px;border-radius:50%;
+      display:grid;place-items:center;
+      background:conic-gradient(var(--cyan) 0deg, var(--violet) 180deg, rgba(255,255,255,.08) 180deg);
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow:0 0 24px rgba(0,245,255,.12);
+    }
+    .dial span{
+      width:56px;height:56px;border-radius:50%;
+      display:grid;place-items:center;
+      background:#0d1422;
+      font-weight:800;
+      font-size:14px;
+    }
+
+    .download-row{
+      margin-top:18px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .table-wrap{
+      overflow:auto;
+      border-radius:20px;
+    }
+
+    table{
+      width:100%;
+      min-width:760px;
+      border-collapse:collapse;
+      background:rgba(255,255,255,.03);
+    }
+
+    th,td{
+      padding:16px;
+      text-align:left;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      font-size:14px;
+      color:rgba(248,250,252,.88);
+      vertical-align:top;
+    }
+    th{
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:var(--muted);
+      background:rgba(255,255,255,.05);
+    }
+    tbody tr:hover{background:rgba(0,245,255,.05)}
+
+    .phase-list{display:grid;gap:16px}
+    .phase{overflow:hidden}
+    .phase-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:20px 22px;
+      cursor:pointer;
+      user-select:none;
+    }
+
+    .phase-left{
+      display:flex;
+      gap:14px;
+      align-items:flex-start;
+      min-width:0;
+    }
+
+    .phase-index{
+      width:56px;height:56px;border-radius:18px;
+      display:grid;place-items:center;
+      background:linear-gradient(135deg, rgba(0,245,255,.16), rgba(123,97,255,.16));
+      border:1px solid rgba(255,255,255,.10);
+      font-weight:900;
+      flex:0 0 auto;
+    }
+
+    .phase-sub{font-size:13px;color:var(--muted);margin-top:6px}
+    .phase-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .status{
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.10);
+      font-size:12px;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .status.pending{color:#d8dce5}
+    .status.progress{color:var(--cyan);background:rgba(0,245,255,.08);border-color:rgba(0,245,255,.20)}
+    .status.done{color:var(--green);background:rgba(20,241,149,.08);border-color:rgba(20,241,149,.20)}
+    .toggle{
+      width:42px;height:42px;border-radius:14px;
+      display:grid;place-items:center;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      font-size:18px;
+      flex:0 0 auto;
+    }
+
+    .phase-body{
+      max-height:0;
+      opacity:0;
+      overflow:hidden;
+      transition:max-height .45s ease, opacity .35s ease;
+      border-top:1px solid rgba(255,255,255,.08);
+    }
+    .phase.open .phase-body{max-height:1400px;opacity:1}
+
+    .phase-content{
+      padding:22px;
+      display:grid;
+      grid-template-columns:1.08fr .92fr;
+      gap:18px;
+    }
+
+    .day-grid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:14px;
+    }
+
+    .day-card{
+      padding:18px;
+      border-radius:18px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .day-card::after{
+      content:"";
+      position:absolute;
+      left:0;right:0;top:0;height:2px;
+      background:linear-gradient(90deg, transparent, var(--cyan), var(--violet), transparent);
+      opacity:.8;
+    }
+
+    .tags{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}
+    .tag{
+      padding:7px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      font-size:12px;
+      color:rgba(248,250,252,.84);
+    }
+
+    .checkpoint{
+      padding:18px;
+      border-radius:18px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      display:grid;
+      gap:14px;
+    }
+
+    .check-list{display:grid;gap:10px}
+    .check{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      padding:10px 12px;
+      border-radius:14px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.06);
+      cursor:pointer;
+    }
+    .check input{
+      margin-top:3px;
+      width:16px;height:16px;
+      accent-color:var(--green);
+      flex:0 0 auto;
+    }
+    .check span{
+      font-size:14px;
+      line-height:1.45;
+      color:rgba(248,250,252,.88);
+    }
+
+    .notes{
+      width:100%;
+      min-height:110px;
+      resize:vertical;
+      border-radius:16px;
+      background:rgba(7,16,28,.9);
+      border:1px solid rgba(255,255,255,.10);
+      color:var(--text);
+      padding:14px;
+      font:inherit;
+      outline:none;
+    }
+
+    .road-side{
+      position:sticky;
+      top:calc(var(--topbar) + 18px);
+      display:grid;
+      gap:18px;
+    }
+
+    .panel{padding:22px}
+    .panel-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
+    .big{font-size:42px;font-weight:900;letter-spacing:-.04em}
+    .small{font-size:13px;color:var(--muted)}
+
+    .map{
+      display:grid;
+      grid-template-columns:repeat(5,minmax(0,1fr));
+      gap:10px;
+      margin-top:14px;
+    }
+
+    .node{
+      padding:14px 10px;
+      border-radius:18px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      text-align:center;
+      font-size:13px;
+      color:var(--muted);
+      position:relative;
+      overflow:hidden;
+      min-height:84px;
+      display:grid;
+      align-items:center;
+      justify-items:center;
+      cursor:pointer;
+    }
+
+    .node::before{
+      content:"";
+      position:absolute;
+      inset:auto 0 0 0;
+      height:2px;
+      background:linear-gradient(90deg, transparent, var(--cyan), transparent);
+      opacity:0;
+      transition:.25s ease;
+    }
+
+    .node.done{
+      color:var(--green);
+      background:rgba(20,241,149,.08);
+      border-color:rgba(20,241,149,.18);
+    }
+    .node.done::before{opacity:1}
+    .node.active{
+      color:#fff;
+      box-shadow:0 0 0 1px rgba(0,245,255,.18) inset,0 0 22px rgba(0,245,255,.08);
+    }
+
+    .metrics-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+    .metric-card{padding:24px;min-height:260px;display:grid;gap:16px}
+    .gauge{
+      width:136px;height:136px;margin:0 auto;position:relative;
+    }
+    .gauge svg{
+      width:100%;height:100%;transform:rotate(-90deg);overflow:visible;
+    }
+    .gauge .bg{stroke:rgba(255,255,255,.08);stroke-width:10;fill:none}
+    .gauge .fg{
+      stroke:url(#gradStroke);
+      stroke-width:10;
+      fill:none;
+      stroke-linecap:round;
+      stroke-dasharray:377;
+      stroke-dashoffset:377;
+      filter:drop-shadow(0 0 8px rgba(0,245,255,.20));
+      transition:stroke-dashoffset 1.2s ease;
+    }
+    .gauge-center{
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
+      text-align:center;
+    }
+    .gauge-center strong{display:block;font-size:18px;letter-spacing:-.03em}
+    .gauge-center span{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+
+    .risk-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+    .risk-card{padding:22px;display:grid;gap:14px;min-height:250px}
+    .risk-top{display:flex;justify-content:space-between;gap:12px;align-items:start}
+    .risk-id{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
+    .severity-wrap{display:grid;gap:8px;font-size:12px;color:var(--muted)}
+    .severity span{background:linear-gradient(90deg,var(--green),var(--amber),var(--red))}
+
+    .report-list{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+      margin-top:16px;
+    }
+
+    .report-item{
+      padding:14px 16px;
+      border-radius:16px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      color:rgba(248,250,252,.90);
+      font-size:14px;
+    }
+
+    .console{
+      padding:20px;
+      border-radius:20px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      display:grid;
+      gap:12px;
+    }
+
+    .console-line{
+      padding:12px 14px;
+      border-radius:14px;
+      background:#0d1525;
+      border:1px solid rgba(255,255,255,.08);
+      color:#b9f9ff;
+      font-size:13px;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      white-space:pre-wrap;
+    }
+
+    .report-output{margin-top:18px;display:none;gap:14px}
+    .report-output.active{display:grid}
+    .report-sheet{
+      padding:24px;
+      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.05));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:22px;
+    }
+
+    .footer{
+      margin-top:22px;
+      padding:22px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+
+    .floating{
+      position:fixed;
+      right:18px;
+      bottom:18px;
+      width:320px;
+      z-index:10;
+    }
+
+    .reveal{
+      opacity:0;
+      transform:translateY(24px);
+      transition:opacity .7s ease, transform .7s ease;
+    }
+    .reveal.visible{
+      opacity:1;
+      transform:none;
+    }
+
+    .hidden-desktop{display:none}
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.42);
+      opacity:0;
+      pointer-events:none;
+      transition:.25s ease;
+      z-index:19;
+    }
+    .overlay.show{opacity:1;pointer-events:auto}
+
+    .ripple{
+      position:absolute;
+      border-radius:50%;
+      transform:scale(0);
+      background:rgba(255,255,255,.35);
+      animation:rip .7s linear;
+      pointer-events:none;
+    }
+
+    @keyframes rip{
+      to{transform:scale(4);opacity:0}
+    }
+
+    .confetti{
+      position:fixed;
+      top:-20px;
+      width:10px;
+      height:18px;
+      z-index:50;
+      opacity:.9;
+      pointer-events:none;
+      animation:fall linear forwards;
+    }
+
+    @keyframes fall{
+      to{transform:translateY(110vh) rotate(780deg);opacity:1}
+    }
+
+    @media (max-width:1180px){
+      .hero-grid,.road-grid,.report-grid,.phase-content{grid-template-columns:1fr}
+      .grid-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .metrics-grid,.risk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .road-side{position:relative;top:auto}
+    }
+
+    @media (max-width:920px){
+      .app{grid-template-columns:1fr}
+      .sidebar{
+        position:fixed;
+        top:0;left:0;
+        width:min(86vw,340px);
+        transform:translateX(-104%);
+        transition:transform .35s ease;
+        z-index:20;
+        box-shadow:24px 0 60px rgba(0,0,0,.35);
+      }
+      .sidebar.open{transform:translateX(0)}
+      .hidden-desktop{display:inline-flex}
+      .topbar{padding-inline:16px}
+      .content{padding:16px}
+      .floating{right:12px;bottom:12px;width:calc(100% - 24px)}
+    }
+
+    @media (max-width:760px){
+      .stats-grid,.grid-3,.grid-2,.grid-4,.metrics-grid,.risk-grid,.compare-wrap,.report-list,.day-grid,.slider-output,.map{
+        grid-template-columns:1fr;
+      }
+      .hero-card,.hero-visual{min-height:auto}
+      .hero-card{padding:26px}
+      .hero-visual{padding:18px}
+      .hud{grid-template-columns:1fr}
+      .topbar{height:auto}
+      .panel-top,.section-head{align-items:flex-start}
+    }
+
+    @page{
+      size:A4;
+      margin:0;
+    }
+
+    @media print{
+      html,body{
+        margin:0;
+        padding:0;
+        background:#fff !important;
+        color:#000 !important;
+      }
+      *{
+        box-shadow:none !important;
+        text-shadow:none !important;
+        animation:none !important;
+        transition:none !important;
+        filter:none !important;
+      }
+      .sidebar,.topbar,.particles,.network,.cursor-glow,.floating,.overlay,.btn,.ghost,.mobile-toggle,.dataset-link{
+        display:none !important;
+      }
+      .app,.main,.content{display:block !important;padding:0 !important}
+      .view{display:block !important}
+      .phase-body{display:block !important;max-height:none !important;opacity:1 !important}
+      .glass,.glow,.card,.panel,.metric-card,.risk-card,.report-sheet,.phase,.long-card{
+        background:#fff !important;
+        border:1px solid #000 !important;
+        border-radius:0 !important;
+      }
+      .hero{min-height:auto !important}
+      .hero-grid,.road-grid,.report-grid,.phase-content,.compare-wrap,.grid-2,.grid-3,.grid-4,.metrics-grid,.risk-grid{
+        display:block !important;
+      }
+      .card,.phase,table,section,.panel{break-inside:avoid;page-break-inside:avoid}
+      .hero-visual,.orb,.cube,.ring,.hud,.core-wrap,body::before,body::after{display:none !important}
+      p,h1,h2,h3,h4,span,strong,li,td,th,label,.small{color:#000 !important}
+      th,td{border:1px solid #000 !important;background:#fff !important}
+      table{min-width:0 !important;width:100% !important}
+      .progress-track,.bar,.severity,.road-fill{background:#fff !important;border:1px solid #000 !important}
+      .progress-track span,.bar span,.severity span,.road-fill span{background:#000 !important}
+      .gauge .bg,.gauge .fg{stroke:#000 !important}
+    }
+  </style>
+</head>
+<body>
+  <canvas class="particles"></canvas>
+  <canvas class="network"></canvas>
+  <div class="cursor-glow"></div>
+  <div class="overlay" id="overlay"></div>
+
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <div>
+          <div class="brand-title">EVOASTRA</div>
+          <div class="brand-sub">AI • Research • Intelligence • Growth</div>
+        </div>
+      </div>
+
+      <div class="nav-list" id="navList">
+        <button class="nav-btn active" data-view="dashboard"><span class="nav-icon">◈</span><span>Dashboard</span></button>
+        <button class="nav-btn" data-view="overview"><span class="nav-icon">◎</span><span>Overview</span></button>
+        <button class="nav-btn" data-view="datasets"><span class="nav-icon">◌</span><span>Datasets</span></button>
+        <button class="nav-btn" data-view="methodology"><span class="nav-icon">▤</span><span>Methodology</span></button>
+        <button class="nav-btn" data-view="roadmap"><span class="nav-icon">▣</span><span>20-Day Roadmap</span></button>
+        <button class="nav-btn" data-view="models"><span class="nav-icon">△</span><span>Models</span></button>
+        <button class="nav-btn" data-view="metrics"><span class="nav-icon">◔</span><span>Metrics</span></button>
+        <button class="nav-btn" data-view="risks"><span class="nav-icon">⚠</span><span>Risks</span></button>
+        <button class="nav-btn" data-view="report"><span class="nav-icon">✦</span><span>Final Report</span></button>
+      </div>
+
+      <div class="side-panel">
+        <h4>Research Project Console</h4>
+        <p>Track the full AI Research Initiative through live progress, delivery checkpoints, dataset access, model readiness, explainability coverage, and final executive packaging.</p>
+        <div class="progress-track" style="margin-top:16px"><span id="sideProgressFill"></span></div>
+        <div class="side-stats">
+          <span id="sideProgressText">0% complete</span>
+          <span id="sideStatus">Pending</span>
+        </div>
+      </div>
+
+      <div class="side-panel">
+        <h4>Execution Stack</h4>
+        <p>Python workflow, modular preprocessing, Logistic Regression, Decision Tree, XGBoost, SMOTE variants, cost-sensitive learning, SHAP, optional LIME, fairness review, reproducibility controls, and print-ready delivery output.</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="left-tools">
+          <button class="mobile-toggle hidden-desktop" id="mobileToggle" aria-label="Open menu">☰</button>
+          <div class="chip">Built by Evoastra Innovation Systems</div>
+          <div class="chip" id="liveClock">Live System</div>
+        </div>
+        <div class="right-tools">
+          <button class="ghost" id="quickRoadmap">Open Roadmap</button>
+          <button class="ghost" id="quickReport">Generate Report</button>
+          <button class="btn primary" id="printApp">Print Report</button>
+        </div>
+      </div>
+
+      <div class="content">
+        <section class="view active" id="view-dashboard">
+          <div class="hero">
+            <div class="hero-grid">
+              <div class="hero-card glass glow reveal">
+                <div class="hero-badge">Built by Evoastra Innovation Systems</div>
+                <h1 id="typedTitle" data-text="Explainable Credit Default Prediction Using Extreme Gradient Boosting and Shapley Additive Explanations for Regulatory-Compliant Lending Decisions"></h1>
+                <p class="subtitle">20-Day AI Execution Blueprint • Live Research Project Control Center</p>
+
+                <div class="badge-row">
+                  <div class="badge">Research Project</div>
+                  <div class="badge">AI Research Initiative</div>
+                  <div class="badge">Delivery Dashboard</div>
+                </div>
+
+                <div class="btn-row">
+                  <button class="btn primary magnetic" data-goto="roadmap">Start Program</button>
+                  <button class="ghost magnetic" data-goto="datasets">Open Datasets</button>
+                  <button class="ghost magnetic" data-goto="roadmap">Track Progress</button>
+                  <button class="ghost magnetic" data-goto="report">Generate Report</button>
+                </div>
+
+                <div class="stats-grid">
+                  <div class="stat">
+                    <div class="stat-label">Execution Window</div>
+                    <div class="stat-value counter" data-target="20">0</div>
+                    <div class="stat-note">Days</div>
+                  </div>
+                  <div class="stat">
+                    <div class="stat-label">Delivery Phases</div>
+                    <div class="stat-value counter" data-target="10">0</div>
+                    <div class="stat-note">Phases</div>
+                  </div>
+                  <div class="stat">
+                    <div class="stat-label">Data Assets</div>
+                    <div class="stat-value counter" data-target="2">0</div>
+                    <div class="stat-note">Datasets</div>
+                  </div>
+                  <div class="stat">
+                    <div class="stat-label">Model Stack</div>
+                    <div class="stat-value counter" data-target="3">0</div>
+                    <div class="stat-note">Models</div>
+                  </div>
+                  <div class="stat">
+                    <div class="stat-label">Review Signals</div>
+                    <div class="stat-value">6+</div>
+                    <div class="stat-note">Metrics</div>
+                  </div>
+                  <div class="stat">
+                    <div class="stat-label">Delivery State</div>
+                    <div class="stat-value">Ready</div>
+                    <div class="stat-note">Executive package enabled</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="hero-visual glass glow reveal">
+                <div class="orb a"></div>
+                <div class="orb b"></div>
+                <div class="orb c"></div>
+
+                <div class="core-wrap">
+                  <div class="ring r1"></div>
+                  <div class="ring r2"></div>
+                  <div class="ring r3"></div>
+                  <div class="ring r4"></div>
+                  <div class="core"><strong>AI</strong></div>
+                  <div class="cube c1"></div>
+                  <div class="cube c2"></div>
+                  <div class="cube c3"></div>
+                  <div class="cube c4"></div>
+
+                  <div class="hud">
+                    <div class="mini">
+                      <strong>190</strong>
+                      <span>AMEX Features</span>
+                    </div>
+                    <div class="mini">
+                      <strong>6.7%</strong>
+                      <span>GMSC Defaults</span>
+                    </div>
+                    <div class="mini">
+                      <strong>SHAP</strong>
+                      <span>Explainability Core</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-head reveal">
+              <div>
+                <div class="eyebrow">Mission Control</div>
+                <h2>Live execution overview</h2>
+              </div>
+              <p style="max-width:720px">This premium web app transforms the full project into a structured research project environment focused on predictive quality, explainability, fairness awareness, regulatory alignment, and controlled delivery execution.</p>
+            </div>
+
+            <div class="grid-4">
+              <div class="card glass glow reveal">
+                <span class="kicker">Challenge</span>
+                <h3>Predict default with clarity</h3>
+                <p>Modern lending decisions need stronger risk detection than simple scorecards while still remaining transparent enough for operations, compliance, governance, and business review.</p>
+              </div>
+              <div class="card glass glow reveal">
+                <span class="kicker">Data Layer</span>
+                <h3>Industrial and benchmark coverage</h3>
+                <p>The execution path combines one large high-dimensional portfolio dataset and one compact benchmark dataset to stress test model behavior under different credit data conditions.</p>
+              </div>
+              <div class="card glass glow reveal">
+                <span class="kicker">Primary Engine</span>
+                <h3>XGBoost performance core</h3>
+                <p>The main predictor captures non-linear borrower patterns through boosted trees, regularization, sampling, and structured optimization.</p>
+              </div>
+              <div class="card glass glow reveal">
+                <span class="kicker">Explanation Layer</span>
+                <h3>SHAP visibility engine</h3>
+                <p>The explainability layer supports both global portfolio insight and local case-level reasoning, with optional LIME comparison for robustness checks.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-overview">
+          <div class="section">
+            <div class="section-head reveal">
+              <div>
+                <div class="eyebrow">Overview</div>
+                <h2>Full project framing</h2>
+              </div>
+              <p style="max-width:760px">This research project is designed as a live fintech intelligence build focused on explainable credit default prediction for regulatory-compliant lending decisions.</p>
+            </div>
+
+            <div class="grid-2">
+              <article class="long-card glass glow reveal">
+                <span class="kicker">Background</span>
+                <h3>Why this project matters</h3>
+                <p style="margin-top:10px">Credit default prediction is one of the most important machine learning applications in financial services because every lending decision depends on estimating whether a borrower is likely to repay. Traditional score-driven approaches are easier to explain, but real borrower behavior is rarely linear, and important signals often emerge through complex interactions across repayment history, utilization patterns, balances, and delinquency behavior.</p>
+                <p style="margin-top:14px">As credit systems become more data-driven, financial institutions need models that can improve portfolio quality without creating opaque decision pathways. The key delivery challenge is not only stronger prediction, but prediction that remains understandable, auditable, fair-aware, and operationally defensible.</p>
+              </article>
+
+              <article class="long-card glass glow reveal">
+                <span class="kicker">Project Intent</span>
+                <h3>What this initiative is built to achieve</h3>
+                <p style="margin-top:10px">The project uses XGBoost as the primary predictive engine and SHAP as the main explainability layer. The objective is to create a framework that can accurately identify likely defaults while also showing why the model behaves the way it does at both portfolio level and individual case level.</p>
+                <p style="margin-top:14px">The final delivery package is intended to balance predictive performance, explanation quality, fairness awareness, regulatory alignment, and reproducible engineering practices in one integrated execution stream.</p>
+              </article>
+
+              <article class="long-card glass glow reveal">
+                <span class="kicker">Research Questions</span>
+                <h3>Core decision questions</h3>
+                <ul class="feature-list">
+                  <li>How will tuned XGBoost perform versus Logistic Regression and Decision Tree across the selected credit datasets?</li>
+                  <li>How effectively can SHAP make the XGBoost decision process understandable to different stakeholders?</li>
+                  <li>What computational overhead is introduced when SHAP is integrated into the pipeline?</li>
+                  <li>Can SHAP-based counterfactual guidance provide realistic and actionable improvement directions?</li>
+                  <li>Will the explanation layer align with transparency and fairness expectations under GDPR, ECOA, and FHA?</li>
+                  <li>Which class imbalance strategy gives the best balance between predictive quality and explanation reliability?</li>
+                </ul>
+              </article>
+
+              <article class="long-card glass glow reveal">
+                <span class="kicker">Objectives</span>
+                <h3>Execution goals</h3>
+                <ul class="feature-list">
+                  <li>Design and develop an XGBoost-based machine learning framework for credit default prediction.</li>
+                  <li>Evaluate predictive performance through AUC ROC, Precision, Recall, F1 Score, MCC, and Brier Score.</li>
+                  <li>Integrate SHAP to interpret model behavior and strengthen transparency for lending decisions.</li>
+                  <li>Retain Logistic Regression and Decision Tree as transparent reference models for comparison.</li>
+                  <li>Measure explanation stability, fidelity, communicability, and counterfactual usefulness.</li>
+                  <li>Embed reproducibility through fixed seeds, version control, modular code structure, and environment consistency.</li>
+                </ul>
+              </article>
+
+              <article class="long-card glass glow reveal">
+                <span class="kicker">Project Significance</span>
+                <h3>Business and operational value</h3>
+                <p style="margin-top:10px">Financial institutions often face a tension between strong predictive power and explainable decisioning. This project demonstrates a delivery pathway where portfolio optimization and transparent decision support can operate together rather than as competing goals.</p>
+                <p style="margin-top:14px">The framework also creates reusable guidance for future AI-led credit systems where performance, fairness checks, and structured explanation must coexist in one operating model.</p>
+              </article>
+
+              <article class="long-card glass glow reveal">
+                <span class="kicker">Scope</span>
+                <h3>Included and excluded boundaries</h3>
+                <ul class="feature-list">
+                  <li>Included: Two public credit datasets, XGBoost, Logistic Regression, Decision Tree, SHAP, optional LIME, class imbalance strategies, fairness review, and compliance mapping.</li>
+                  <li>Included: Missing value treatment, feature engineering, outlier control, Bayesian optimization, cross-validation, and executive reporting.</li>
+                  <li>Excluded: Real-time deployment APIs, production monitoring infrastructure, deep neural network paths, adversarial robustness analysis, and other financial domains beyond credit risk.</li>
+                </ul>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-datasets">
+          <div class="section">
+            <div class="section-head reveal">
+              <div>
+                <div class="eyebrow">Datasets</div>
+                <h2>Interactive dataset command center</h2>
+              </div>
+              <p style="max-width:760px">The project uses two public credit datasets with sharply different size, structure, and imbalance characteristics so the framework can be tested under both industrial-scale and compact benchmark conditions.</p>
+            </div>
+
+            <div class="compare-wrap">
+              <article class="long-card glass glow reveal">
+                <span class="kicker">Dataset 1</span>
+                <h3>American Express Default Prediction Dataset</h3>
+                <p style="margin-top:10px">This dataset includes approximately 458,913 customers and 190 anonymized features. It is an industrial-level credit risk dataset with time-based statement records, broad feature categories, high missingness, and strong computational demands.</p>
+                <div class="meter-stack">
+                  <div class="meter">
+                    <label><span>Customer Scale</span><strong>458,913</strong></label>
+                    <div class="bar"><span style="width:96%"></span></div>
+                  </div>
+                  <div class="meter">
+                    <label><span>Feature Depth</span><strong>190</strong></label>
+                    <div class="bar"><span style="width:100%"></span></div>
+                  </div>
+                  <div class="meter">
+                    <label><span>Complexity</span><strong>Very High</strong></label>
+                    <div class="bar"><span style="width:94%"></span></div>
+                  </div>
+                </div>
+                <ul class="feature-list">
+                  <li>Contains delinquency, spending, payment, balance, and risk indicators across repeated statement dates.</li>
+                  <li>Requires aggregation to customer level using mean, standard deviation, minimum, maximum, and recent value logic.</li>
+                  <li>Contains substantial missing values and category-specific data behavior that require careful treatment.</li>
+                  <li>Feature correlation is strong across several variable groups, so collinearity control matters.</li>
+                </ul>
+                <div class="download-row">
+                  <a class="dataset-link magnetic" href="https://www.kaggle.com/competitions/amex-default-prediction" target="_blank" rel="noopener">Download AMEX Dataset</a>
+                </div>
+              </article>
+
+              <article class="long-card glass glow reveal">
+                <span class="kicker">Dataset 2</span>
+                <h3>GiveMeSomeCredit Dataset</h3>
+                <p style="margin-top:10px">This dataset contains 150,000 borrower records and 11 financial and demographic features, with a default rate of 6.7 percent. It acts as a compact benchmark dataset for explanation clarity, baseline comparison, and controlled imbalance evaluation.</p>
+                <div class="meter-stack">
+                  <div class="meter">
+                    <label><span>Borrower Rows</span><strong>150,000</strong></label>
+                    <div class="bar"><span style="width:72%"></span></div>
+                  </div>
+                  <div class="meter">
+                    <label><span>Feature Count</span><strong>11</strong></label>
+                    <div class="bar"><span style="width:18%"></span></div>
+                  </div>
+                  <div class="meter">
+                    <label><span>Default Rate</span><strong>6.7%</strong></label>
+                    <div class="bar"><span style="width:32%"></span></div>
+                  </div>
+                </div>
+                <ul class="feature-list">
+                  <li>Compact structure makes it useful for straightforward interpretation and benchmark modeling.</li>
+                  <li>Includes strong imbalance and missing values in fields such as income and dependents.</li>
+                  <li>Supports easier side-by-side evaluation of model quality and explanation behavior.</li>
+                  <li>Useful for testing threshold optimization, calibration, and fairness checks in a smaller feature space.</li>
+                </ul>
+                <div class="download-row">
+                  <a class="dataset-link magnetic" href="https://www.kaggle.com/competitions/GiveMeSomeCredit/data" target="_blank" rel="noopener">Download GMSC Dataset</a>
+                </div>
+              </article>
+            </div>
+
+            <div class="slider-card glass glow reveal">
+              <h3>Complexity vs explainability lens</h3>
+              <p style="margin-top:10px">Shift the focus between industrial scale modeling complexity and compact benchmark explainability.</p>
+              <div style="margin-top:18px">
+                <input id="datasetSlider" type="range" min="0" max="100" value="50" />
+              </div>
+              <div class="slider-output">
+                <div class="slider-pill" id="focusLeft">AMEX focus: balanced</div>
+                <div class="dial"><span id="focusDial">50</span></div>
+                <div class="slider-pill" id="focusRight">GMSC focus: balanced</div>
+              </div>
+            </div>
+
+            <div class="table-wrap glass glow reveal">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Dataset</th>
+                    <th>Records</th>
+                    <th>Features</th>
+                    <th>Default Rate</th>
+                    <th>Source</th>
+                    <th>Complexity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>American Express Default Prediction</td>
+                    <td>458,913 customers</td>
+                    <td>190</td>
+                    <td>~26% observed in competition sample</td>
+                    <td>Kaggle</td>
+                    <td>Very High</td>
+                  </tr>
+                  <tr>
+                    <td>GiveMeSomeCredit</td>
+                    <td>150,000</td>
+                    <td>11</td>
+                    <td>6.7%</td>
+                    <td>Kaggle</td>
+                    <td>Low–Moderate</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-methodology">
+          <div class="section">
+            <div class="section-head reveal">
+              <div>
+                <div class="eyebrow">Methodology</div>
+                <h2>End-to-end execution architecture</h2>
+              </div>
+              <p style="max-width:760px">The methodology combines structured preprocessing, class imbalance remediation, baseline benchmarking, XGBoost optimization, SHAP explainability, fairness awareness, and reproducible engineering practices.</p>
+            </div>
+
+            <div class="grid-3">
+              <article class="card glass glow reveal">
+                <span class="kicker">Data Preparation</span>
+                <h3>Missing value treatment</h3>
+                <p>Missingness is handled through a tailored approach based on data behavior. Random missingness is addressed with multivariate imputation, while conditional missingness is handled with predictor-driven imputation and sensitivity checks.</p>
+                <ul class="feature-list">
+                  <li>MICE-based logic where appropriate.</li>
+                  <li>Conditional treatment for feature-linked gaps.</li>
+                  <li>Stability checks across imputation assumptions.</li>
+                </ul>
+              </article>
+
+              <article class="card glass glow reveal">
+                <span class="kicker">Feature Layer</span>
+                <h3>Engineering and aggregation</h3>
+                <p>Feature engineering goes beyond raw fields by building debt capacity indicators, utilization measures, delinquency severity signals, temporal trends, and aggregated borrower-level summaries.</p>
+                <ul class="feature-list">
+                  <li>AMEX time-series aggregation to customer vectors.</li>
+                  <li>Derived ratios and interaction signals.</li>
+                  <li>Leakage-aware encoding and standardization.</li>
+                </ul>
+              </article>
+
+              <article class="card glass glow reveal">
+                <span class="kicker">Outlier Control</span>
+                <h3>Robust anomaly handling</h3>
+                <p>Extreme values are capped and scaled to reduce training distortion, while implausible multivariate combinations are reviewed through anomaly detection logic.</p>
+                <ul class="feature-list">
+                  <li>IQR review and winsorization.</li>
+                  <li>Robust scaling for continuous variables.</li>
+                  <li>Isolation Forest for unusual combinations.</li>
+                </ul>
+              </article>
+
+              <article class="card glass glow reveal">
+                <span class="kicker">Class Imbalance</span>
+                <h3>Minority default preservation</h3>
+                <p>Because credit defaults are sparse, the framework combines oversampling strategies, cost-sensitive training, and threshold optimization to reduce missed defaults without losing explanation quality.</p>
+                <ul class="feature-list">
+                  <li>SMOTE and variants.</li>
+                  <li>Cost-sensitive learning.</li>
+                  <li>Threshold optimization and hybrid testing.</li>
+                </ul>
+              </article>
+
+              <article class="card glass glow reveal">
+                <span class="kicker">Modeling</span>
+                <h3>Benchmarks and primary engine</h3>
+                <p>Logistic Regression and Decision Tree provide transparent reference models, while XGBoost serves as the primary high-performance ensemble model tuned through Bayesian optimization.</p>
+                <ul class="feature-list">
+                  <li>Logistic coefficients for clarity.</li>
+                  <li>Decision rules for simple path tracing.</li>
+                  <li>XGBoost with 100 Bayesian search iterations.</li>
+                </ul>
+              </article>
+
+              <article class="card glass glow reveal">
+                <span class="kicker">Explainability</span>
+                <h3>SHAP-first visibility layer</h3>
+                <p>SHAP TreeExplainer powers global feature ranking, local case explanations, waterfall views, dependence analysis, and counterfactual insight. LIME remains optional for comparative evaluation.</p>
+                <ul class="feature-list">
+                  <li>Global importance ranking.</li>
+                  <li>Local case-level explanation.</li>
+                  <li>Fidelity, stability, and communicability review.</li>
+                </ul>
+              </article>
+            </div>
+
+            <div class="grid-2">
+              <article class="long-card glass glow reveal">
+                <span class="kicker">Implementation Architecture</span>
+                <h3>Modular system design</h3>
+                <ul class="feature-list">
+                  <li><strong>data_loading</strong> for dataset acquisition, validation, and quality checks.</li>
+                  <li><strong>preprocessing</strong> for missing values, outliers, feature engineering, and imbalance handling.</li>
+                  <li><strong>model_training</strong> for Logistic Regression, Decision Tree, XGBoost, and Bayesian optimization.</li>
+                  <li><strong>explainability</strong> for SHAP, optional LIME, and counterfactual analysis.</li>
+                  <li><strong>evaluation</strong> for metrics, cross-validation, statistical testing, and reporting aggregation.</li>
+                  <li><strong>utilities</strong> for logging, result packaging, helper functions, and visualization support.</li>
+                </ul>
+              </article>
+
+              <article class="long-card glass glow reveal">
+                <span class="kicker">Evaluation Logic</span>
+                <h3>How quality is judged</h3>
+                <ul class="feature-list">
+                  <li>AUC ROC for threshold-independent ranking power.</li>
+                  <li>Precision for false approval control.</li>
+                  <li>Recall for loss prevention through missed-default reduction.</li>
+                  <li>F1 Score for balance under class imbalance.</li>
+                  <li>MCC for robust overall quality in uneven class distributions.</li>
+                  <li>Brier Score for probability calibration and reliability.</li>
+                  <li>Explanation fidelity, feature stability, communicability, and counterfactual validity.</li>
+                </ul>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-roadmap">
+          <div class="section">
+            <div class="section-head reveal">
+              <div>
+                <div class="eyebrow">20-Day Roadmap</div>
+                <h2>Interactive execution tracker</h2>
+              </div>
+              <p style="max-width:760px">Each phase includes live checklists, notes, completion status, and local storage persistence so the project behaves like a real delivery dashboard rather than a static page.</p>
+            </div>
+
+            <div class="road-grid">
+              <div class="phase-list" id="phaseList"></div>
+
+              <div class="road-side">
+                <div class="panel glass glow reveal">
+                  <div class="panel-top">
+                    <div>
+                      <div class="small">Overall completion</div>
+                      <div class="big" id="progressPercent">0%</div>
+                    </div>
+                    <div class="status pending" id="masterStatus">Pending</div>
+                  </div>
+                  <div class="road-fill" style="margin-top:14px"><span id="progressFill"></span></div>
+                  <p style="margin-top:14px">Progress updates automatically as checkpoints are completed across the full 20-day execution roadmap.</p>
+                </div>
+
+                <div class="panel glass glow reveal">
+                  <h3>Roadmap nodes</h3>
+                  <div class="map" id="phaseMap"></div>
+                </div>
+
+                <div class="panel glass glow reveal">
+                  <h3>Execution actions</h3>
+                  <div class="btn-row">
+                    <button class="btn primary magnetic" id="completeAll">Mark All Complete</button>
+                    <button class="ghost magnetic" id="resetAll">Reset Program</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-models">
+          <div class="section">
+            <div class="section-head reveal">
+              <div>
+                <div class="eyebrow">Models</div>
+                <h2>Comparative model stack</h2>
+              </div>
+              <p style="max-width:760px">The modeling layer is intentionally structured so transparent benchmarks remain visible while the primary ensemble engine demonstrates measurable improvement.</p>
+            </div>
+
+            <div class="grid-3">
+              <article class="card glass glow reveal">
+                <span class="kicker">Baseline 1</span>
+                <h3>Logistic Regression</h3>
+                <p style="margin-top:10px">Used as a reference model because coefficients directly show how features affect the probability of default.</p>
+                <div class="meter-stack">
+                  <div class="meter"><label><span>Speed</span><strong>Very Fast</strong></label><div class="bar"><span style="width:92%"></span></div></div>
+                  <div class="meter"><label><span>Accuracy</span><strong>Moderate</strong></label><div class="bar"><span style="width:62%"></span></div></div>
+                  <div class="meter"><label><span>Explainability</span><strong>High</strong></label><div class="bar"><span style="width:95%"></span></div></div>
+                </div>
+                <ul class="feature-list">
+                  <li>Coefficient-driven interpretability.</li>
+                  <li>Natural benchmark for regulated comparison.</li>
+                  <li>Can miss non-linear interaction effects.</li>
+                </ul>
+              </article>
+
+              <article class="card glass glow reveal">
+                <span class="kicker">Baseline 2</span>
+                <h3>Decision Tree</h3>
+                <p style="margin-top:10px">Used for rule-based transparency because path splits can be traced step by step and presented clearly to non-technical audiences.</p>
+                <div class="meter-stack">
+                  <div class="meter"><label><span>Speed</span><strong>Fast</strong></label><div class="bar"><span style="width:82%"></span></div></div>
+                  <div class="meter"><label><span>Accuracy</span><strong>Moderate</strong></label><div class="bar"><span style="width:60%"></span></div></div>
+                  <div class="meter"><label><span>Explainability</span><strong>High</strong></label><div class="bar"><span style="width:90%"></span></div></div>
+                </div>
+                <ul class="feature-list">
+                  <li>Simple rule learning.</li>
+                  <li>Easy to visualize and explain.</li>
+                  <li>Needs pruning to control overfitting.</li>
+                </ul>
+              </article>
+
+              <article class="card glass glow reveal">
+                <span class="kicker">Primary Engine</span>
+                <h3>XGBoost</h3>
+                <p style="margin-top:10px">Selected as the main predictive engine because it captures complex non-linear borrower behavior with strong efficiency and strong ranking performance.</p>
+                <div class="meter-stack">
+                  <div class="meter"><label><span>Speed</span><strong>Fast</strong></label><div class="bar"><span style="width:80%"></span></div></div>
+                  <div class="meter"><label><span>Accuracy</span><strong>Very High</strong></label><div class="bar"><span style="width:95%"></span></div></div>
+                  <div class="meter"><label><span>Explainability</span><strong>Via SHAP</strong></label><div class="bar"><span style="width:84%"></span></div></div>
+                </div>
+                <ul class="feature-list">
+                  <li>Regularized boosting with second-order optimization.</li>
+                  <li>Bayesian hyperparameter tuning.</li>
+                  <li>Best suited as the main decision engine in this project.</li>
+                </ul>
+              </article>
+            </div>
+
+            <div class="table-wrap glass glow reveal">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Model</th>
+                    <th>Type</th>
+                    <th>Speed</th>
+                    <th>Explainability</th>
+                    <th>Expected Accuracy</th>
+                    <th>Use Case</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Logistic Regression</td>
+                    <td>Baseline</td>
+                    <td>Very Fast</td>
+                    <td>High</td>
+                    <td>Moderate</td>
+                    <td>Reference benchmark and coefficient clarity</td>
+                  </tr>
+                  <tr>
+                    <td>Decision Tree</td>
+                    <td>Baseline</td>
+                    <td>Fast</td>
+                    <td>High</td>
+                    <td>Moderate</td>
+                    <td>Rule-based comparison and simple path tracing</td>
+                  </tr>
+                  <tr>
+                    <td>XGBoost</td>
+                    <td>Primary Ensemble</td>
+                    <td>Fast</td>
+                    <td>Low without XAI, strong with SHAP</td>
+                    <td>Very High</td>
+                    <td>Main predictive engine for the project</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-metrics">
+          <div class="section">
+            <div class="section-head reveal">
+              <div>
+                <div class="eyebrow">Metrics</div>
+                <h2>Performance and explanation review</h2>
+              </div>
+              <p style="max-width:760px">One metric alone can hide weaknesses in imbalanced lending data, so the framework uses multiple performance and explanation quality measures together.</p>
+            </div>
+
+            <svg width="0" height="0" style="position:absolute">
+              <defs>
+                <linearGradient id="gradStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#00F5FF"></stop>
+                  <stop offset="50%" stop-color="#7B61FF"></stop>
+                  <stop offset="100%" stop-color="#14F195"></stop>
+                </linearGradient>
+              </defs>
+            </svg>
+
+            <div class="metrics-grid">
+              <article class="metric-card glass glow reveal">
+                <div class="gauge" data-progress="86">
+                  <svg viewBox="0 0 140 140">
+                    <circle class="bg" cx="70" cy="70" r="60"></circle>
+                    <circle class="fg" cx="70" cy="70" r="60"></circle>
+                  </svg>
+                  <div class="gauge-center"><div><strong>AUC ROC</strong><span>Ranking power</span></div></div>
+                </div>
+                <p>Measures how well the model ranks likely defaults above likely non-defaults without relying on one fixed decision threshold.</p>
+              </article>
+
+              <article class="metric-card glass glow reveal">
+                <div class="gauge" data-progress="75">
+                  <svg viewBox="0 0 140 140">
+                    <circle class="bg" cx="70" cy="70" r="60"></circle>
+                    <circle class="fg" cx="70" cy="70" r="60"></circle>
+                  </svg>
+                  <div class="gauge-center"><div><strong>Precision</strong><span>Approval control</span></div></div>
+                </div>
+                <p>Shows how many predicted defaults are truly defaults and helps reduce unnecessary rejection decisions.</p>
+              </article>
+
+              <article class="metric-card glass glow reveal">
+                <div class="gauge" data-progress="82">
+                  <svg viewBox="0 0 140 140">
+                    <circle class="bg" cx="70" cy="70" r="60"></circle>
+                    <circle class="fg" cx="70" cy="70" r="60"></circle>
+                  </svg>
+                  <div class="gauge-center"><div><strong>Recall</strong><span>Loss prevention</span></div></div>
+                </div>
+                <p>Shows how many actual defaults are detected, which is critical because missed defaults translate directly into loss exposure.</p>
+              </article>
+
+              <article class="metric-card glass glow reveal">
+                <div class="gauge" data-progress="79">
+                  <svg viewBox="0 0 140 140">
+                    <circle class="bg" cx="70" cy="70" r="60"></circle>
+                    <circle class="fg" cx="70" cy="70" r="60"></circle>
+                  </svg>
+                  <div class="gauge-center"><div><strong>F1 Score</strong><span>Balanced view</span></div></div>
+                </div>
+                <p>Balances precision and recall into one signal, which is especially useful when the default class is much smaller.</p>
+              </article>
+
+              <article class="metric-card glass glow reveal">
+                <div class="gauge" data-progress="80">
+                  <svg viewBox="0 0 140 140">
+                    <circle class="bg" cx="70" cy="70" r="60"></circle>
+                    <circle class="fg" cx="70" cy="70" r="60"></circle>
+                  </svg>
+                  <div class="gauge-center"><div><strong>MCC</strong><span>Imbalance robust</span></div></div>
+                </div>
+                <p>Provides one of the most balanced single-number views of performance when class sizes are uneven.</p>
+              </article>
+
+              <article class="metric-card glass glow reveal">
+                <div class="gauge" data-progress="70">
+                  <svg viewBox="0 0 140 140">
+                    <circle class="bg" cx="70" cy="70" r="60"></circle>
+                    <circle class="fg" cx="70" cy="70" r="60"></circle>
+                  </svg>
+                  <div class="gauge-center"><div><strong>Brier Score</strong><span>Calibration</span></div></div>
+                </div>
+                <p>Measures how reliable predicted probabilities are, which matters for pricing, limits, and risk-aware lending operations.</p>
+              </article>
+            </div>
+
+            <div class="grid-2">
+              <article class="long-card glass glow reveal">
+                <span class="kicker">Explainability Quality</span>
+                <h3>How the explanation layer is judged</h3>
+                <ul class="feature-list">
+                  <li>Feature importance stability across samples and perturbations.</li>
+                  <li>Explanation fidelity to actual model decision behavior.</li>
+                  <li>Counterfactual validity based on whether suggested changes alter outcomes.</li>
+                  <li>Communicability for non-technical stakeholders through structured review.</li>
+                </ul>
+              </article>
+
+              <article class="long-card glass glow reveal">
+                <span class="kicker">Regulatory Alignment</span>
+                <h3>What the project checks</h3>
+                <ul class="feature-list">
+                  <li>Transparency expectations under GDPR for automated decisions.</li>
+                  <li>Fair treatment expectations under ECOA.</li>
+                  <li>Housing-related fairness relevance under FHA.</li>
+                  <li>Bias proxy awareness and fairness review alongside explanation outputs.</li>
+                </ul>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-risks">
+          <div class="section">
+            <div class="section-head reveal">
+              <div>
+                <div class="eyebrow">Risk Command Center</div>
+                <h2>Operational safeguards</h2>
+              </div>
+              <p style="max-width:760px">The project includes explicit mitigation and contingency planning so delivery remains resilient even under data, compute, explainability, or timeline pressure.</p>
+            </div>
+
+            <div class="risk-grid">
+              <article class="risk-card glass glow reveal">
+                <div class="risk-top">
+                  <div><div class="risk-id">R1</div><h3>Dataset accessibility or corruption</h3></div>
+                  <div class="status pending">Low–Moderate</div>
+                </div>
+                <div class="severity-wrap"><span>Severity</span><div class="severity"><span style="width:46%"></span></div></div>
+                <p>Mitigation: immediate dataset backup and integrity checksums.</p>
+                <p>Fallback: switch to alternative public credit datasets if intake fails.</p>
+              </article>
+
+              <article class="risk-card glass glow reveal">
+                <div class="risk-top">
+                  <div><div class="risk-id">R2</div><h3>Inadequate compute for AMEX</h3></div>
+                  <div class="status progress">Moderate</div>
+                </div>
+                <div class="severity-wrap"><span>Severity</span><div class="severity"><span style="width:64%"></span></div></div>
+                <p>Mitigation: GPU-ready execution, data sampling optimization, and efficient preprocessing.</p>
+                <p>Fallback: CPU-only training with feature-reduced AMEX subset.</p>
+              </article>
+
+              <article class="risk-card glass glow reveal">
+                <div class="risk-top">
+                  <div><div class="risk-id">R3</div><h3>XGBoost convergence failure</h3></div>
+                  <div class="status pending">Low–Moderate</div>
+                </div>
+                <div class="severity-wrap"><span>Severity</span><div class="severity"><span style="width:44%"></span></div></div>
+                <p>Mitigation: proper initialization, learning-rate scheduling, and run monitoring.</p>
+                <p>Fallback: use stable default hyperparameters as the starting configuration.</p>
+              </article>
+
+              <article class="risk-card glass glow reveal">
+                <div class="risk-top">
+                  <div><div class="risk-id">R4</div><h3>Optimization inefficiency</h3></div>
+                  <div class="status progress">Moderate</div>
+                </div>
+                <div class="severity-wrap"><span>Severity</span><div class="severity"><span style="width:58%"></span></div></div>
+                <p>Mitigation: domain-informed search ranges with coarse refinement.</p>
+                <p>Fallback: expanded random search on narrowed parameter space.</p>
+              </article>
+
+              <article class="risk-card glass glow reveal">
+                <div class="risk-top">
+                  <div><div class="risk-id">R5</div><h3>SHAP memory overflow</h3></div>
+                  <div class="status progress">Moderate</div>
+                </div>
+                <div class="severity-wrap"><span>Severity</span><div class="severity"><span style="width:63%"></span></div></div>
+                <p>Mitigation: TreeExplainer plus strategic subsampling for large-scale runs.</p>
+                <p>Fallback: compute SHAP on a representative sample of 10,000 rows.</p>
+              </article>
+
+              <article class="risk-card glass glow reveal">
+                <div class="risk-top">
+                  <div><div class="risk-id">R6</div><h3>Imbalance mitigation underperformance</h3></div>
+                  <div class="status pending">Low</div>
+                </div>
+                <div class="severity-wrap"><span>Severity</span><div class="severity"><span style="width:34%"></span></div></div>
+                <p>Mitigation: multiple hybrid imbalance strategies and stratified validation.</p>
+                <p>Fallback: threshold optimization with conservative default capture priority.</p>
+              </article>
+
+              <article class="risk-card glass glow reveal">
+                <div class="risk-top">
+                  <div><div class="risk-id">R7</div><h3>Reproducibility failure</h3></div>
+                  <div class="status done">Low</div>
+                </div>
+                <div class="severity-wrap"><span>Severity</span><div class="severity"><span style="width:24%"></span></div></div>
+                <p>Mitigation: fixed seeds, version control, exact dependency capture, and containerization.</p>
+                <p>Fallback: define output tolerance ranges and document environment differences.</p>
+              </article>
+
+              <article class="risk-card glass glow reveal">
+                <div class="risk-top">
+                  <div><div class="risk-id">R8</div><h3>Schedule disruption</h3></div>
+                  <div class="status pending">Minimal</div>
+                </div>
+                <div class="severity-wrap"><span>Severity</span><div class="severity"><span style="width:28%"></span></div></div>
+                <p>Mitigation: built-in buffer time and versioned work tracking.</p>
+                <p>Fallback: partial delivery package with clearly documented status and next steps.</p>
+              </article>
+
+              <article class="risk-card glass glow reveal">
+                <div class="risk-top">
+                  <div><div class="risk-id">R9</div><h3>Feature engineering inefficiency</h3></div>
+                  <div class="status pending">Low–Moderate</div>
+                </div>
+                <div class="severity-wrap"><span>Severity</span><div class="severity"><span style="width:40%"></span></div></div>
+                <p>Mitigation: ablation studies and validation checkpoints for each major feature block.</p>
+                <p>Fallback: use raw aggregated AMEX features without expanded engineering layers.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-report">
+          <div class="section">
+            <div class="section-head reveal">
+              <div>
+                <div class="eyebrow">Final Report</div>
+                <h2>Executive package generator</h2>
+              </div>
+              <p style="max-width:760px">Generate a clean final executive report that summarizes context, objectives, datasets, methodology, model stack, explainability approach, metrics, risks, and delivery status.</p>
+            </div>
+
+            <div class="report-grid">
+              <div class="card glass glow reveal">
+                <h3>Package sections</h3>
+                <div class="report-list">
+                  <div class="report-item">Executive Summary</div>
+                  <div class="report-item">Project Background</div>
+                  <div class="report-item">Objectives</div>
+                  <div class="report-item">Scope</div>
+                  <div class="report-item">Datasets</div>
+                  <div class="report-item">Methodology</div>
+                  <div class="report-item">Model Stack</div>
+                  <div class="report-item">Explainability</div>
+                  <div class="report-item">Metrics</div>
+                  <div class="report-item">Risks</div>
+                  <div class="report-item">Recommendations</div>
+                  <div class="report-item">Delivery Status</div>
+                </div>
+                <div class="btn-row">
+                  <button class="btn primary magnetic" id="generateReportBtn">Generate Final Report</button>
+                  <button class="ghost magnetic" id="printReportBtn">Print to PDF</button>
+                </div>
+              </div>
+
+              <div class="card glass glow reveal">
+                <div class="console">
+                  <div class="console-line" id="line1">[INIT] EVOASTRA execution layer online.</div>
+                  <div class="console-line" id="line2">[SYNC] Roadmap state waiting for checkpoint updates.</div>
+                  <div class="console-line" id="line3">[READY] Executive package not generated.</div>
+                  <div class="console-line" id="line4">[STATUS] Local progress persistence enabled.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="report-output" id="reportOutput">
+              <div class="report-sheet reveal">
+                <h3>Executive Summary</h3>
+                <p id="reportSummary"></p>
+              </div>
+
+              <div class="grid-2">
+                <div class="report-sheet reveal">
+                  <h3>Project Snapshot</h3>
+                  <ul class="feature-list">
+                    <li>Primary goal: explainable credit default prediction for regulated lending decisions.</li>
+                    <li>Primary engine: XGBoost with SHAP-based interpretation.</li>
+                    <li>Reference models: Logistic Regression and Decision Tree.</li>
+                    <li>Data base: AMEX and GiveMeSomeCredit.</li>
+                  </ul>
+                </div>
+
+                <div class="report-sheet reveal">
+                  <h3>Delivery Recommendations</h3>
+                  <ul class="feature-list">
+                    <li>Use XGBoost as the production-grade benchmark within the project environment.</li>
+                    <li>Keep transparent benchmarks visible in every comparison cycle.</li>
+                    <li>Report performance, explanation quality, fairness review, and governance evidence together.</li>
+                    <li>Retain reproducibility controls for every pipeline rerun.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <footer class="glass glow footer">
+          <div>
+            <div class="brand-title">EVOASTRA</div>
+            <div class="brand-sub">AI • Research • Intelligence • Growth</div>
+          </div>
+          <div class="small">Powered by Evoastra Ventures (OPC) Pvt Ltd</div>
+        </footer>
+      </div>
+    </main>
+  </div>
+
+  <div class="floating">
+    <div class="panel glass glow">
+      <div class="small">Live completion</div>
+      <div class="big" id="floatPercent">0%</div>
+      <div class="road-fill"><span id="floatFill"></span></div>
+      <div class="side-stats" style="margin-top:12px">
+        <span id="floatText">0 / 0 checkpoints</span>
+        <span id="floatState">Pending</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const phaseData = [
+      {
+        id:1,
+        days:"Day 1–2",
+        title:"Environment and control layer",
+        summary:"Set up Python tools, repository structure, package versions, folders, and reproducibility foundations.",
+        daysList:[
+          {day:"Day 1", title:"Core environment setup", detail:"Install Python, required libraries, notebook or IDE tooling, Git, and a controlled project structure.", tags:["Python","Libraries","Git","Setup"]},
+          {day:"Day 2", title:"Execution control", detail:"Create folders, initialize version control, define dependencies, and prepare reproducibility rules.", tags:["Versioning","Folders","Dependencies","Control"]}
+        ],
+        checklist:["Environment ready","Repository initialized","Dependency list prepared","Execution folders created"],
+        deliverables:["Operational workspace","Controlled repository","Reproducibility baseline"]
+      },
+      {
+        id:2,
+        days:"Day 3–4",
+        title:"Scope and domain framing",
+        summary:"Translate the full project into delivery questions, objectives, and practical credit risk context.",
+        daysList:[
+          {day:"Day 3", title:"Domain understanding", detail:"Review explainability concepts, credit scoring logic, class imbalance behavior, and regulatory expectations.", tags:["Credit Risk","XAI","Fairness","Regulation"]},
+          {day:"Day 4", title:"Project framing", detail:"Convert the project into execution questions, objectives, and business-aligned scope boundaries.", tags:["Objectives","Scope","Questions","Value"]}
+        ],
+        checklist:["Problem framing complete","Objectives mapped","Scope boundaries defined"],
+        deliverables:["Project frame","Question matrix","Scope map"]
+      },
+      {
+        id:3,
+        days:"Day 5–6",
+        title:"Dataset intake and EDA",
+        summary:"Acquire AMEX and GMSC, validate schemas, inspect missing values, class distribution, and basic patterns.",
+        daysList:[
+          {day:"Day 5", title:"Data intake", detail:"Validate source files, target columns, shape, and data integrity across both datasets.", tags:["AMEX","GMSC","Validation","Schema"]},
+          {day:"Day 6", title:"Exploration", detail:"Run summaries, feature distributions, class imbalance checks, and early correlation analysis.", tags:["EDA","Missingness","Imbalance","Patterns"]}
+        ],
+        checklist:["Datasets acquired","EDA completed","Missing values reviewed","Class imbalance identified"],
+        deliverables:["Validated datasets","EDA summary","Issue register"]
+      },
+      {
+        id:4,
+        days:"Day 7–8",
+        title:"Cleaning and quality control",
+        summary:"Handle missing values, outliers, and data consistency issues before model training.",
+        daysList:[
+          {day:"Day 7", title:"Missing value treatment", detail:"Apply multivariate and conditional imputation with sensitivity review.", tags:["MICE","Imputation","Sensitivity","Quality"]},
+          {day:"Day 8", title:"Outlier control", detail:"Use robust scaling, winsorization, and anomaly detection for implausible combinations.", tags:["Winsorization","Robust Scaling","Isolation Forest","Control"]}
+        ],
+        checklist:["Imputation complete","Outliers controlled","Quality checks passed"],
+        deliverables:["Clean data layer","Imputation notes","Anomaly log"]
+      },
+      {
+        id:5,
+        days:"Day 9–10",
+        title:"Feature engineering",
+        summary:"Build derived variables, aggregate AMEX timelines, encode categories, and prepare model-ready inputs.",
+        daysList:[
+          {day:"Day 9", title:"Derived feature construction", detail:"Create debt capacity, utilization, delinquency severity, and interaction signals.", tags:["Ratios","Utilization","Delinquency","Interactions"]},
+          {day:"Day 10", title:"Aggregation and encoding", detail:"Aggregate AMEX records to customer level and encode without leakage.", tags:["Aggregation","Encoding","Scaling","Leakage Control"]}
+        ],
+        checklist:["Feature matrix ready","AMEX aggregation complete","Encoding validated"],
+        deliverables:["Model-ready matrix","Feature catalog","Transformation register"]
+      },
+      {
+        id:6,
+        days:"Day 11–12",
+        title:"Baseline model build",
+        summary:"Train Logistic Regression and Decision Tree for transparent benchmarking.",
+        daysList:[
+          {day:"Day 11", title:"Logistic Regression", detail:"Train the linear reference model and capture speed, clarity, and benchmark performance.", tags:["Logistic","Baseline","Coefficients","Reference"]},
+          {day:"Day 12", title:"Decision Tree", detail:"Train a controlled rule-based model for transparent path comparison.", tags:["Decision Tree","Rules","Pruning","Benchmark"]}
+        ],
+        checklist:["Logistic model complete","Decision Tree complete","Baseline results logged"],
+        deliverables:["Baseline scorecards","Initial metric table","Transparent comparison pack"]
+      },
+      {
+        id:7,
+        days:"Day 13–15",
+        title:"XGBoost optimization",
+        summary:"Train the primary model, tune hyperparameters, and validate gains from the full pipeline.",
+        daysList:[
+          {day:"Day 13", title:"Primary XGBoost build", detail:"Train XGBoost with imbalance-aware settings and stable configuration.", tags:["XGBoost","Boosting","Primary Engine","Stability"]},
+          {day:"Day 14", title:"Bayesian optimization", detail:"Tune depth, learning rate, regularization, subsampling, and estimator count.", tags:["Bayesian","Hyperopt","Tuning","Search"]},
+          {day:"Day 15", title:"Validation review", detail:"Run structured comparisons and evaluate gains from feature work and imbalance remediation.", tags:["Validation","Ablation","Cross-check","Improvement"]}
+        ],
+        checklist:["XGBoost complete","Optimization complete","Validation complete"],
+        deliverables:["Optimized XGBoost","Tuning summary","Improvement evidence"]
+      },
+      {
+        id:8,
+        days:"Day 16–17",
+        title:"Explainability integration",
+        summary:"Integrate SHAP for global and local explanation with optional LIME comparison.",
+        daysList:[
+          {day:"Day 16", title:"Global explanation", detail:"Generate feature importance and portfolio-level explanation views.", tags:["SHAP","Global Importance","Drivers","Portfolio"]},
+          {day:"Day 17", title:"Local explanation", detail:"Create waterfall views, case-level insights, and optional LIME comparison.", tags:["Waterfall","Force Views","Counterfactual","LIME"]}
+        ],
+        checklist:["SHAP integration complete","Explanation visuals generated","Local analysis reviewed"],
+        deliverables:["Explainability pack","Feature ranking","Case-level explanation set"]
+      },
+      {
+        id:9,
+        days:"Day 18–19",
+        title:"Metrics, fairness, and governance",
+        summary:"Evaluate performance, calibration, explanation quality, fairness checks, and regulatory alignment.",
+        daysList:[
+          {day:"Day 18", title:"Metric review", detail:"Measure AUC ROC, Precision, Recall, F1 Score, MCC, and Brier Score.", tags:["AUC ROC","Precision","Recall","Calibration"]},
+          {day:"Day 19", title:"Governance review", detail:"Assess fairness exposure, explanation quality, and alignment with GDPR, ECOA, and FHA.", tags:["Fairness","GDPR","ECOA","FHA"]}
+        ],
+        checklist:["Metrics complete","Fairness review complete","Governance notes complete"],
+        deliverables:["Evaluation dashboard","Governance summary","Compliance mapping"]
+      },
+      {
+        id:10,
+        days:"Day 20",
+        title:"Final executive package",
+        summary:"Compile the complete delivery package and enable clean export for review and print.",
+        daysList:[
+          {day:"Day 20", title:"Final package generation", detail:"Create the final executive report, summary views, and presentation-ready output.", tags:["Executive Report","Delivery","Print","Packaging"]}
+        ],
+        checklist:["Final report generated","Sections reviewed","Export ready"],
+        deliverables:["Final Executive Report","Delivery bundle","Print-ready package"]
+      }
+    ];
+
+    const stateKey = "evoastra_live_project_v2";
+    const reportKey = "evoastra_report_generated_v2";
+    let state = loadState();
+
+    function loadState(){
+      const saved = localStorage.getItem(stateKey);
+      if(saved) return JSON.parse(saved);
+      const base = {};
+      phaseData.forEach(p=>{
+        base[p.id] = {
+          open: p.id === 1,
+          notes: "",
+          checks: p.checklist.map(()=>false)
+        };
+      });
+      return base;
+    }
+
+    function saveState(){
+      localStorage.setItem(stateKey, JSON.stringify(state));
+    }
+
+    function statusForPhase(id){
+      const checks = state[id].checks;
+      const done = checks.filter(Boolean).length;
+      if(done === 0) return "pending";
+      if(done === checks.length) return "done";
+      return "progress";
+    }
+
+    function percentForPhase(id){
+      const checks = state[id].checks;
+      return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+    }
+
+    function totals(){
+      let total = 0, complete = 0;
+      phaseData.forEach(p=>{
+        total += state[p.id].checks.length;
+        complete += state[p.id].checks.filter(Boolean).length;
+      });
+      return {
+        total,
+        complete,
+        percent: total ? Math.round((complete / total) * 100) : 0
+      };
+    }
+
+    function renderPhases(){
+      const list = document.getElementById("phaseList");
+      const map = document.getElementById("phaseMap");
+      list.innerHTML = "";
+      map.innerHTML = "";
+
+      phaseData.forEach(phase=>{
+        const phaseState = state[phase.id];
+        const phaseStatus = statusForPhase(phase.id);
+        const pct = percentForPhase(phase.id);
+
+        const el = document.createElement("article");
+        el.className = `phase glass glow reveal ${phaseState.open ? "open" : ""}`;
+        el.innerHTML = `
+          <div class="phase-head" data-phase="${phase.id}">
+            <div class="phase-left">
+              <div class="phase-index">${String(phase.id).padStart(2,"0")}</div>
+              <div>
+                <h3>${phase.title}</h3>
+                <div class="phase-sub">${phase.days} • ${phase.summary}</div>
+              </div>
+            </div>
+            <div class="phase-right">
+              <div class="status ${phaseStatus}">${phaseStatus === "done" ? "Completed" : phaseStatus === "progress" ? "In Progress" : "Pending"}</div>
+              <div class="status">${pct}%</div>
+              <div class="toggle">${phaseState.open ? "−" : "+"}</div>
+            </div>
+          </div>
+          <div class="phase-body">
+            <div class="phase-content">
+              <div>
+                <div class="day-grid">
+                  ${phase.daysList.map(day=>`
+                    <div class="day-card">
+                      <h4>${day.day} • ${day.title}</h4>
+                      <p style="margin-top:8px">${day.detail}</p>
+                      <div class="tags">${day.tags.map(tag=>`<span class="tag">${tag}</span>`).join("")}</div>
+                    </div>
+                  `).join("")}
+                </div>
+              </div>
+              <div>
+                <div class="checkpoint">
+                  <h4>Checkpoint System</h4>
+                  <div class="check-list">
+                    ${phase.checklist.map((item, idx)=>`
+                      <label class="check">
+                        <input type="checkbox" data-check="${phase.id}" data-idx="${idx}" ${phaseState.checks[idx] ? "checked" : ""}>
+                        <span>${item}</span>
+                      </label>
+                    `).join("")}
+                  </div>
+                </div>
+
+                <div class="checkpoint" style="margin-top:14px">
+                  <h4>Expected outputs</h4>
+                  <ul class="feature-list">
+                    ${phase.deliverables.map(d=>`<li>${d}</li>`).join("")}
+                  </ul>
+                </div>
+
+                <div class="checkpoint" style="margin-top:14px">
+                  <h4>Notes panel</h4>
+                  <textarea class="notes" data-notes="${phase.id}" placeholder="Capture blockers, decisions, observations, and validation notes...">${phaseState.notes}</textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        list.appendChild(el);
+
+        const node = document.createElement("button");
+        node.type = "button";
+        node.className = `node ${phaseStatus === "done" ? "done" : ""} ${phaseState.open ? "active" : ""}`;
+        node.dataset.jump = phase.id;
+        node.innerHTML = `<strong>Phase ${phase.id}</strong><span>${phase.days}</span>`;
+        map.appendChild(node);
+      });
+
+      bindPhaseEvents();
+      observeReveal();
+      updateProgressUI();
+    }
+
+    function bindPhaseEvents(){
+      document.querySelectorAll(".phase-head").forEach(head=>{
+        head.addEventListener("click", ()=>{
+          const id = Number(head.dataset.phase);
+          state[id].open = !state[id].open;
+          saveState();
+          renderPhases();
+        });
+      });
+
+      document.querySelectorAll("[data-check]").forEach(input=>{
+        input.addEventListener("change", ()=>{
+          const phaseId = Number(input.dataset.check);
+          const idx = Number(input.dataset.idx);
+          state[phaseId].checks[idx] = input.checked;
+          saveState();
+          renderPhases();
+          if(totals().percent === 100) blastConfetti();
+        });
+      });
+
+      document.querySelectorAll("[data-notes]").forEach(area=>{
+        area.addEventListener("input", ()=>{
+          const phaseId = Number(area.dataset.notes);
+          state[phaseId].notes = area.value;
+          saveState();
+        });
+      });
+
+      document.querySelectorAll("[data-jump]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const id = Number(btn.dataset.jump);
+          state[id].open = true;
+          saveState();
+          renderPhases();
+          const target = document.querySelector(`.phase-head[data-phase="${id}"]`);
+          if(target) target.scrollIntoView({behavior:"smooth", block:"center"});
+        });
+      });
+    }
+
+    function updateProgressUI(){
+      const t = totals();
+      const donePhases = phaseData.filter(p=>statusForPhase(p.id) === "done").length;
+      const stateText = t.percent === 100 ? "Completed" : t.percent > 0 ? "In Progress" : "Pending";
+      const statusClass = t.percent === 100 ? "done" : t.percent > 0 ? "progress" : "pending";
+
+      document.getElementById("progressPercent").textContent = `${t.percent}%`;
+      document.getElementById("progressFill").style.width = `${t.percent}%`;
+      document.getElementById("masterStatus").textContent = stateText;
+      document.getElementById("masterStatus").className = `status ${statusClass}`;
+
+      document.getElementById("sideProgressFill").style.width = `${t.percent}%`;
+      document.getElementById("sideProgressText").textContent = `${t.percent}% complete`;
+      document.getElementById("sideStatus").textContent = `${donePhases}/10 phases`;
+
+      document.getElementById("floatPercent").textContent = `${t.percent}%`;
+      document.getElementById("floatFill").style.width = `${t.percent}%`;
+      document.getElementById("floatText").textContent = `${t.complete} / ${t.total} checkpoints`;
+      document.getElementById("floatState").textContent = stateText;
+    }
+
+    function setActiveView(view){
+      document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+      const target = document.getElementById(`view-${view}`);
+      if(target) target.classList.add("active");
+
+      document.querySelectorAll(".nav-btn").forEach(btn=>{
+        btn.classList.toggle("active", btn.dataset.view === view);
+      });
+
+      document.querySelector(".content").scrollIntoView({behavior:"smooth", block:"start"});
+      observeReveal();
+    }
+
+    function bindNavigation(){
+      document.querySelectorAll(".nav-btn").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          setActiveView(btn.dataset.view);
+          closeSidebar();
+        });
+      });
+
+      document.querySelectorAll("[data-goto]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          setActiveView(btn.dataset.goto);
+        });
+      });
+
+      document.getElementById("quickRoadmap").addEventListener("click", ()=>setActiveView("roadmap"));
+      document.getElementById("quickReport").addEventListener("click", ()=>{
+        setActiveView("report");
+        generateReport();
+      });
+      document.getElementById("printApp").addEventListener("click", ()=>window.print());
+      document.getElementById("printReportBtn").addEventListener("click", ()=>window.print());
+    }
+
+    function bindGlobalActions(){
+      document.getElementById("completeAll").addEventListener("click", ()=>{
+        phaseData.forEach(p=>{
+          state[p.id].checks = state[p.id].checks.map(()=>true);
+          state[p.id].open = true;
+        });
+        saveState();
+        renderPhases();
+        blastConfetti();
+      });
+
+      document.getElementById("resetAll").addEventListener("click", ()=>{
+        localStorage.removeItem(stateKey);
+        localStorage.removeItem(reportKey);
+        state = loadState();
+        renderPhases();
+        document.getElementById("reportOutput").classList.remove("active");
+        document.getElementById("line3").textContent = "[READY] Executive package not generated.";
+      });
+
+      document.getElementById("generateReportBtn").addEventListener("click", generateReport);
+    }
+
+    function generateReport(){
+      const t = totals();
+      const pct = t.percent;
+      const reportOutput = document.getElementById("reportOutput");
+      reportOutput.classList.add("active");
+
+      const summary = `This research project delivers an explainable credit default prediction framework built around XGBoost and SHAP, supported by transparent benchmark models and a structured 20-day execution roadmap. Current completion stands at ${pct}% across ${t.complete} of ${t.total} tracked checkpoints. The project combines two public credit datasets, robust preprocessing, class imbalance handling, explainability analysis, fairness-aware review, and reproducible delivery practices to support regulatory-compliant lending decisions.`;
+
+      document.getElementById("reportSummary").textContent = summary;
+      document.getElementById("line1").textContent = "[INIT] EVOASTRA execution layer online.";
+      document.getElementById("line2").textContent = `[SYNC] ${t.complete}/${t.total} checkpoints synchronized.`;
+      document.getElementById("line3").textContent = "[READY] Final executive package generated.";
+      document.getElementById("line4").textContent = `[STATUS] Delivery completion: ${pct}%.`;
+      localStorage.setItem(reportKey, "1");
+      observeReveal();
+    }
+
+    function datasetSlider(){
+      const slider = document.getElementById("datasetSlider");
+      const dial = document.getElementById("focusDial");
+      const left = document.getElementById("focusLeft");
+      const right = document.getElementById("focusRight");
+
+      function update(){
+        const v = Number(slider.value);
+        dial.textContent = v;
+        dial.parentElement.style.background = `conic-gradient(var(--cyan) 0deg, var(--violet) ${v * 3.6}deg, rgba(255,255,255,.08) ${v * 3.6}deg)`;
+        if(v < 35){
+          left.textContent = "AMEX focus: explainability light";
+          right.textContent = "GMSC focus: explanation heavy";
+        }else if(v > 65){
+          left.textContent = "AMEX focus: complexity heavy";
+          right.textContent = "GMSC focus: benchmark support";
+        }else{
+          left.textContent = "AMEX focus: balanced";
+          right.textContent = "GMSC focus: balanced";
+        }
+      }
+
+      slider.addEventListener("input", update);
+      update();
+    }
+
+    function animateCounters(){
+      document.querySelectorAll(".counter").forEach(counter=>{
+        const target = Number(counter.dataset.target);
+        let current = 0;
+        const step = Math.max(1, Math.ceil(target / 40));
+        const timer = setInterval(()=>{
+          current += step;
+          if(current >= target){
+            current = target;
+            clearInterval(timer);
+          }
+          counter.textContent = current;
+        }, 28);
+      });
+    }
+
+    function animateGauges(){
+      document.querySelectorAll(".gauge").forEach(gauge=>{
+        const val = Number(gauge.dataset.progress);
+        const fg = gauge.querySelector(".fg");
+        const circumference = 377;
+        const offset = circumference - (circumference * val / 100);
+        fg.style.strokeDashoffset = offset;
+      });
+    }
+
+    function typeTitle(){
+      const el = document.getElementById("typedTitle");
+      const txt = el.dataset.text;
+      let i = 0;
+      function run(){
+        if(i <= txt.length){
+          el.textContent = txt.slice(0, i);
+          i++;
+          requestAnimationFrame(()=>setTimeout(run, 16));
+        }
+      }
+      run();
+    }
+
+    function observeReveal(){
+      const items = document.querySelectorAll(".reveal");
+      const io = new IntersectionObserver(entries=>{
+        entries.forEach(entry=>{
+          if(entry.isIntersecting){
+            entry.target.classList.add("visible");
+            io.unobserve(entry.target);
+          }
+        });
+      },{threshold:.12});
+      items.forEach(item=>{
+        if(!item.classList.contains("visible")) io.observe(item);
+      });
+    }
+
+    function startClock(){
+      const el = document.getElementById("liveClock");
+      function update(){
+        const now = new Date();
+        const parts = now.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"});
+        el.textContent = `Live System • ${parts}`;
+      }
+      update();
+      setInterval(update, 1000);
+    }
+
+    function bindSidebar(){
+      const sidebar = document.getElementById("sidebar");
+      const overlay = document.getElementById("overlay");
+      document.getElementById("mobileToggle").addEventListener("click", ()=>{
+        sidebar.classList.add("open");
+        overlay.classList.add("show");
+      });
+      overlay.addEventListener("click", closeSidebar);
+    }
+
+    function closeSidebar(){
+      document.getElementById("sidebar").classList.remove("open");
+      document.getElementById("overlay").classList.remove("show");
+    }
+
+    function bindRipple(){
+      document.querySelectorAll(".btn,.ghost,.mobile-toggle,.dataset-link,.nav-btn").forEach(btn=>{
+        btn.addEventListener("click", function(e){
+          const r = document.createElement("span");
+          const rect = this.getBoundingClientRect();
+          const size = Math.max(rect.width, rect.height);
+          r.className = "ripple";
+          r.style.width = r.style.height = `${size}px`;
+          r.style.left = `${e.clientX - rect.left - size / 2}px`;
+          r.style.top = `${e.clientY - rect.top - size / 2}px`;
+          this.appendChild(r);
+          setTimeout(()=>r.remove(), 700);
+        });
+      });
+    }
+
+    function bindMagnetic(){
+      document.querySelectorAll(".magnetic").forEach(el=>{
+        el.addEventListener("mousemove", e=>{
+          const rect = el.getBoundingClientRect();
+          const x = e.clientX - rect.left - rect.width / 2;
+          const y = e.clientY - rect.top - rect.height / 2;
+          el.style.transform = `translate(${x * 0.05}px, ${y * 0.05}px)`;
+        });
+        el.addEventListener("mouseleave", ()=>{
+          el.style.transform = "";
+        });
+      });
+    }
+
+    function cursorGlow(){
+      const glow = document.querySelector(".cursor-glow");
+      window.addEventListener("pointermove", e=>{
+        glow.style.left =
+          glow.style.left = `${e.clientX}px`;
+          glow.style.top = `${e.clientY}px`;
+        });
+      }
+
+      function particleField(){
+        const canvas = document.querySelector(".particles");
+        const ctx = canvas.getContext("2d");
+        let w, h, particles;
+
+        function resize(){
+          w = canvas.width = window.innerWidth;
+          h = canvas.height = window.innerHeight;
+          particles = Array.from({length: Math.min(90, Math.floor(w / 18))}, () => ({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            r: Math.random() * 2 + .6,
+            vx: (Math.random() - .5) * .35,
+            vy: (Math.random() - .5) * .35,
+            a: Math.random() * .5 + .15
+          }));
+        }
+
+        function draw(){
+          ctx.clearRect(0,0,w,h);
+          particles.forEach(p=>{
+            p.x += p.vx;
+            p.y += p.vy;
+            if(p.x < 0 || p.x > w) p.vx *= -1;
+            if(p.y < 0 || p.y > h) p.vy *= -1;
+            ctx.beginPath();
+            ctx.fillStyle = `rgba(0,245,255,${p.a})`;
+            ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+            ctx.fill();
+          });
+          requestAnimationFrame(draw);
+        }
+
+        window.addEventListener("resize", resize);
+        resize();
+        draw();
+      }
+
+      function networkField(){
+        const canvas = document.querySelector(".network");
+        const ctx = canvas.getContext("2d");
+        let w, h, nodes;
+
+        function resize(){
+          w = canvas.width = window.innerWidth;
+          h = canvas.height = window.innerHeight;
+          nodes = Array.from({length: Math.min(34, Math.floor(w / 45))}, () => ({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            vx: (Math.random() - .5) * .28,
+            vy: (Math.random() - .5) * .28
+          }));
+        }
+
+        function draw(){
+          ctx.clearRect(0,0,w,h);
+          for(let i=0;i<nodes.length;i++){
+            const a = nodes[i];
+            a.x += a.vx;
+            a.y += a.vy;
+            if(a.x < 0 || a.x > w) a.vx *= -1;
+            if(a.y < 0 || a.y > h) a.vy *= -1;
+
+            for(let j=i+1;j<nodes.length;j++){
+              const b = nodes[j];
+              const dx = a.x - b.x;
+              const dy = a.y - b.y;
+              const d = Math.sqrt(dx*dx + dy*dy);
+              if(d < 160){
+                ctx.beginPath();
+                ctx.strokeStyle = `rgba(123,97,255,${(1 - d/160) * 0.18})`;
+                ctx.lineWidth = 1;
+                ctx.moveTo(a.x,a.y);
+                ctx.lineTo(b.x,b.y);
+                ctx.stroke();
+              }
+            }
+          }
+          requestAnimationFrame(draw);
+        }
+
+        window.addEventListener("resize", resize);
+        resize();
+        draw();
+      }
+
+      function blastConfetti(){
+        const colors = ["#00F5FF","#7B61FF","#14F195","#FFC857","#FFFFFF"];
+        for(let i=0;i<120;i++){
+          const piece = document.createElement("span");
+          piece.className = "confetti";
+          piece.style.left = `${Math.random() * 100}vw`;
+          piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+          piece.style.animationDuration = `${Math.random() * 2 + 2.5}s`;
+          piece.style.opacity = `${Math.random() * .5 + .5}`;
+          piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+          document.body.appendChild(piece);
+          setTimeout(()=>piece.remove(), 5200);
+        }
+      }
+
+      function restoreReportIfNeeded(){
+        if(localStorage.getItem(reportKey) === "1"){
+          document.getElementById("reportOutput").classList.add("active");
+          const t = totals();
+          document.getElementById("reportSummary").textContent =
+            `This research project delivers an explainable credit default prediction framework built around XGBoost and SHAP, supported by transparent benchmark models and a structured 20-day execution roadmap. Current completion stands at ${t.percent}% across ${t.complete} of ${t.total} tracked checkpoints. The project combines two public credit datasets, robust preprocessing, class imbalance handling, explainability analysis, fairness-aware review, and reproducible delivery practices to support regulatory-compliant lending decisions.`;
+          document.getElementById("line3").textContent = "[READY] Final executive package generated.";
+          document.getElementById("line4").textContent = `[STATUS] Delivery completion: ${t.percent}%.`;
+        }
+      }
+      async function fetchGroupActivity() {
+          // This points exactly to your new repository
+          const repo = "santoshshresth/Amex"; 
+          try {
+              const response = await fetch(`https://api.github.com/repos/${repo}/commits`);
+              const commits = await response.json();
+              
+              // Update the 4 console lines with the latest group activity
+              for(let i=0; i<4; i++) {
+                  if(commits[i]) {
+                      const author = commits[i].commit.author.name;
+                      const msg = commits[i].commit.message;
+                      // Format the date nicely
+                      const date = new Date(commits[i].commit.author.date).toLocaleDateString([], {month:'short', day:'numeric'});
+                      
+                      document.getElementById(`line${i+1}`).textContent = `[${date}] ${author.toUpperCase()} SUBMITTED: ${msg}`;
+                  }
+              }
+          } catch(e) {
+              console.log("Could not fetch GitHub activity.");
+          }
+      }
+      function init(){
+        renderPhases();
+        bindNavigation();
+        bindGlobalActions();
+        bindSidebar();
+        datasetSlider();
+        animateCounters();
+        animateGauges();
+        typeTitle();
+        observeReveal();
+        startClock();
+        bindRipple();
+        bindMagnetic();
+        cursorGlow();
+        particleField();
+        networkField();
+        restoreReportIfNeeded();
+        fetchGroupActivity();
+      }
+
+      init();
+    </script>
+  </body>
+</html>
