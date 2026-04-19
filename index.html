@@ -1185,6 +1185,7 @@
         <button class="nav-btn" data-view="metrics"><span class="nav-icon">◔</span><span>Metrics</span></button>
         <button class="nav-btn" data-view="risks"><span class="nav-icon">⚠</span><span>Risks</span></button>
         <button class="nav-btn" data-view="report"><span class="nav-icon">✦</span><span>Final Report</span></button>
+        <button class="nav-btn" data-view="logs"><span class="nav-icon">▤</span><span>System Logs</span></button>
       </div>
 
       <div class="side-panel">
@@ -2077,6 +2078,24 @@
             </div>
           </div>
         </section>
+        <section class="view" id="view-logs">
+          <div class="section">
+            <div class="section-head reveal">
+              <div>
+                <div class="eyebrow">Mission Control</div>
+                <h2>Live System Logs</h2>
+              </div>
+              <p style="max-width:760px">Real-time repository activity and work submissions from the GitHub team feed.</p>
+            </div>
+
+            <div class="card glass glow reveal">
+              <div class="console" id="activityConsole">
+                <div class="console-line">[INIT] EVOASTRA execution layer online.</div>
+                <div class="console-line">[SYNC] Fetching repository activity...</div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <footer class="glass glow footer">
           <div>
@@ -2752,28 +2771,36 @@
           document.getElementById("line4").textContent = `[STATUS] Delivery completion: ${t.percent}%.`;
         }
       }
+
       async function fetchGroupActivity() {
-          // This points exactly to your new repository
-          const repo = "santoshshresth/Amex"; 
-          try {
-              const response = await fetch(`https://api.github.com/repos/${repo}/commits`);
-              const commits = await response.json();
-              
-              // Update the 4 console lines with the latest group activity
-              for(let i=0; i<4; i++) {
-                  if(commits[i]) {
-                      const author = commits[i].commit.author.name;
-                      const msg = commits[i].commit.message;
-                      // Format the date nicely
-                      const date = new Date(commits[i].commit.author.date).toLocaleDateString([], {month:'short', day:'numeric'});
-                      
-                      document.getElementById(`line${i+1}`).textContent = `[${date}] ${author.toUpperCase()} SUBMITTED: ${msg}`;
-                  }
-              }
-          } catch(e) {
-              console.log("Could not fetch GitHub activity.");
+      // Points exactly to your GitHub repository
+        const repo = "santoshshresth/Amex"; 
+        const consoleBox = document.getElementById("activityConsole");
+        
+        try {
+          const response = await fetch(`https://api.github.com/repos/${repo}/commits`);
+          const commits = await response.json();
+          
+          // Start with the init line
+          let newHTML = '<div class="console-line">[INIT] EVOASTRA execution layer online.</div>';
+          
+          // Loop through the last 10 commits
+          for(let i=0; i<Math.min(10, commits.length); i++) {
+            const author = commits[i].commit.author.name;
+            const msg = commits[i].commit.message;
+            // Format date and time
+            const date = new Date(commits[i].commit.author.date).toLocaleDateString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+            
+            newHTML += `<div class="console-line">[${date}] ${author.toUpperCase()} SUBMITTED: ${msg}</div>`;
           }
+          
+          // Inject the live data into the console
+          consoleBox.innerHTML = newHTML;
+        } catch(e) {
+          consoleBox.innerHTML += `<div class="console-line" style="color: #FF5E7A;">[ERROR] Could not fetch GitHub activity. Check connection.</div>`;
+        }
       }
+
       function init(){
         renderPhases();
         bindNavigation();
