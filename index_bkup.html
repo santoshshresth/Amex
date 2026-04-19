@@ -828,6 +828,29 @@
       gap:14px;
     }
 
+    .check-list{display:grid;gap:10px}
+    .check{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      padding:10px 12px;
+      border-radius:14px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.06);
+      cursor:pointer;
+    }
+    .check input{
+      margin-top:3px;
+      width:16px;height:16px;
+      accent-color:var(--green);
+      flex:0 0 auto;
+    }
+    .check span{
+      font-size:14px;
+      line-height:1.45;
+      color:rgba(248,250,252,.88);
+    }
+
     .notes{
       width:100%;
       min-height:110px;
@@ -1053,32 +1076,6 @@
     @keyframes fall{
       to{transform:translateY(110vh) rotate(780deg);opacity:1}
     }
-
-    /* --- NEW STATUS PILLS AND DEADLINES CSS --- */
-    .status-pill {
-      font-size: 0.75em;
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      white-space: nowrap;
-    }
-    .status-done { background: rgba(20, 241, 149, 0.15); color: #14F195; }
-    .status-progress { background: rgba(0, 245, 255, 0.15); color: #00F5FF; }
-    .status-ready { background: rgba(255, 255, 255, 0.1); color: #e2e8f0; }
-    .status-blocked { background: rgba(255, 94, 122, 0.15); color: #FF5E7A; }
-    .status-review { background: rgba(255, 184, 108, 0.15); color: #ffb86c; } /* Warning Orange */
-
-    .deadline {
-      font-size: 13px;
-      color: #94a3b8;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .deadline-urgent { color: #ffb86c; font-weight: bold; }
-    .deadline-overdue { color: #ff5e7a; font-weight: bold; }
 
     @media (max-width:1180px){
       .hero-grid,.road-grid,.report-grid,.phase-content{grid-template-columns:1fr}
@@ -1651,7 +1648,7 @@
                 <div class="eyebrow">20-Day Roadmap</div>
                 <h2>Interactive execution tracker</h2>
               </div>
-              <p style="max-width:760px">Each phase is synced directly with GitHub Issues. Flag an issue with the <code>needs-review</code> label to put it in Review, or close it on GitHub to automatically mark it as Done here.</p>
+              <p style="max-width:760px">Each phase includes live checklists, notes, completion status, and local storage persistence so the project behaves like a real delivery dashboard rather than a static page.</p>
             </div>
 
             <div class="road-grid">
@@ -1667,7 +1664,7 @@
                     <div class="status pending" id="masterStatus">Pending</div>
                   </div>
                   <div class="road-fill" style="margin-top:14px"><span id="progressFill"></span></div>
-                  <p style="margin-top:14px">Progress updates automatically when you or your team close linked GitHub Issues.</p>
+                  <p style="margin-top:14px">Progress updates automatically as checkpoints are completed across the full 20-day execution roadmap.</p>
                 </div>
 
                 <div class="panel glass glow reveal">
@@ -1678,7 +1675,7 @@
                 <div class="panel glass glow reveal">
                   <h3>Execution actions</h3>
                   <div class="btn-row">
-                    <button class="btn primary magnetic" id="completeAll">Mark All Complete (Test)</button>
+                    <button class="btn primary magnetic" id="completeAll">Mark All Complete</button>
                     <button class="ghost magnetic" id="resetAll">Reset Program</button>
                   </div>
                 </div>
@@ -2081,7 +2078,6 @@
             </div>
           </div>
         </section>
-
         <section class="view" id="view-logs">
           <div class="section">
             <div class="section-head reveal">
@@ -2128,118 +2124,128 @@
     const phaseData = [
       {
         id:1,
-        days:"Phase 1",
+        days:"Day 1–2",
         title:"Environment and control layer",
         summary:"Set up Python tools, repository structure, package versions, folders, and reproducibility foundations.",
         daysList:[
-          {day:"Task 1", title:"Core environment setup", detail:"Install Python, required libraries, notebook or IDE tooling, Git, and a controlled project structure.", tags:["Python","Libraries","Git","Setup"], issue: 1, deadline: "Apr 20"},
-          {day:"Task 2", title:"Execution control", detail:"Create folders, initialize version control, define dependencies, and prepare reproducibility rules.", tags:["Versioning","Folders","Dependencies","Control"], issue: 2, deadline: "Apr 21"}
+          {day:"Day 1", title:"Core environment setup", detail:"Install Python, required libraries, notebook or IDE tooling, Git, and a controlled project structure.", tags:["Python","Libraries","Git","Setup"]},
+          {day:"Day 2", title:"Execution control", detail:"Create folders, initialize version control, define dependencies, and prepare reproducibility rules.", tags:["Versioning","Folders","Dependencies","Control"]}
         ],
+        checklist:["Environment ready","Repository initialized","Dependency list prepared","Execution folders created"],
         deliverables:["Operational workspace","Controlled repository","Reproducibility baseline"]
       },
       {
         id:2,
-        days:"Phase 2",
+        days:"Day 3–4",
         title:"Scope and domain framing",
         summary:"Translate the full project into delivery questions, objectives, and practical credit risk context.",
         daysList:[
-          {day:"Task 3", title:"Domain understanding", detail:"Review explainability concepts, credit scoring logic, class imbalance behavior, and regulatory expectations.", tags:["Credit Risk","XAI","Fairness","Regulation"], issue: 3, deadline: "Apr 22"},
-          {day:"Task 4", title:"Project framing", detail:"Convert the project into execution questions, objectives, and business-aligned scope boundaries.", tags:["Objectives","Scope","Questions","Value"], issue: 4, deadline: "Apr 23"}
+          {day:"Day 3", title:"Domain understanding", detail:"Review explainability concepts, credit scoring logic, class imbalance behavior, and regulatory expectations.", tags:["Credit Risk","XAI","Fairness","Regulation"]},
+          {day:"Day 4", title:"Project framing", detail:"Convert the project into execution questions, objectives, and business-aligned scope boundaries.", tags:["Objectives","Scope","Questions","Value"]}
         ],
+        checklist:["Problem framing complete","Objectives mapped","Scope boundaries defined"],
         deliverables:["Project frame","Question matrix","Scope map"]
       },
       {
         id:3,
-        days:"Phase 3",
+        days:"Day 5–6",
         title:"Dataset intake and EDA",
         summary:"Acquire AMEX and GMSC, validate schemas, inspect missing values, class distribution, and basic patterns.",
         daysList:[
-          {day:"Task 5", title:"Data intake", detail:"Validate source files, target columns, shape, and data integrity across both datasets.", tags:["AMEX","GMSC","Validation","Schema"], issue: 5, deadline: "Apr 24"},
-          {day:"Task 6", title:"Exploration", detail:"Run summaries, feature distributions, class imbalance checks, and early correlation analysis.", tags:["EDA","Missingness","Imbalance","Patterns"], issue: 6, deadline: "Apr 25"}
+          {day:"Day 5", title:"Data intake", detail:"Validate source files, target columns, shape, and data integrity across both datasets.", tags:["AMEX","GMSC","Validation","Schema"]},
+          {day:"Day 6", title:"Exploration", detail:"Run summaries, feature distributions, class imbalance checks, and early correlation analysis.", tags:["EDA","Missingness","Imbalance","Patterns"]}
         ],
+        checklist:["Datasets acquired","EDA completed","Missing values reviewed","Class imbalance identified"],
         deliverables:["Validated datasets","EDA summary","Issue register"]
       },
       {
         id:4,
-        days:"Phase 4",
+        days:"Day 7–8",
         title:"Cleaning and quality control",
         summary:"Handle missing values, outliers, and data consistency issues before model training.",
         daysList:[
-          {day:"Task 7", title:"Missing value treatment", detail:"Apply multivariate and conditional imputation with sensitivity review.", tags:["MICE","Imputation","Sensitivity","Quality"], issue: 7, deadline: "Apr 26"},
-          {day:"Task 8", title:"Outlier control", detail:"Use robust scaling, winsorization, and anomaly detection for implausible combinations.", tags:["Winsorization","Robust Scaling","Isolation Forest","Control"], issue: 8, deadline: "Apr 27"}
+          {day:"Day 7", title:"Missing value treatment", detail:"Apply multivariate and conditional imputation with sensitivity review.", tags:["MICE","Imputation","Sensitivity","Quality"]},
+          {day:"Day 8", title:"Outlier control", detail:"Use robust scaling, winsorization, and anomaly detection for implausible combinations.", tags:["Winsorization","Robust Scaling","Isolation Forest","Control"]}
         ],
+        checklist:["Imputation complete","Outliers controlled","Quality checks passed"],
         deliverables:["Clean data layer","Imputation notes","Anomaly log"]
       },
       {
         id:5,
-        days:"Phase 5",
+        days:"Day 9–10",
         title:"Feature engineering",
         summary:"Build derived variables, aggregate AMEX timelines, encode categories, and prepare model-ready inputs.",
         daysList:[
-          {day:"Task 9", title:"Derived feature construction", detail:"Create debt capacity, utilization, delinquency severity, and interaction signals.", tags:["Ratios","Utilization","Delinquency","Interactions"], issue: 9, deadline: "Apr 28"},
-          {day:"Task 10", title:"Aggregation and encoding", detail:"Aggregate AMEX records to customer level and encode without leakage.", tags:["Aggregation","Encoding","Scaling","Leakage Control"], issue: 10, deadline: "Apr 29"}
+          {day:"Day 9", title:"Derived feature construction", detail:"Create debt capacity, utilization, delinquency severity, and interaction signals.", tags:["Ratios","Utilization","Delinquency","Interactions"]},
+          {day:"Day 10", title:"Aggregation and encoding", detail:"Aggregate AMEX records to customer level and encode without leakage.", tags:["Aggregation","Encoding","Scaling","Leakage Control"]}
         ],
+        checklist:["Feature matrix ready","AMEX aggregation complete","Encoding validated"],
         deliverables:["Model-ready matrix","Feature catalog","Transformation register"]
       },
       {
         id:6,
-        days:"Phase 6",
+        days:"Day 11–12",
         title:"Baseline model build",
         summary:"Train Logistic Regression and Decision Tree for transparent benchmarking.",
         daysList:[
-          {day:"Task 11", title:"Logistic Regression", detail:"Train the linear reference model and capture speed, clarity, and benchmark performance.", tags:["Logistic","Baseline","Coefficients","Reference"], issue: 11, deadline: "Apr 30"},
-          {day:"Task 12", title:"Decision Tree", detail:"Train a controlled rule-based model for transparent path comparison.", tags:["Decision Tree","Rules","Pruning","Benchmark"], issue: 12, deadline: "May 1"}
+          {day:"Day 11", title:"Logistic Regression", detail:"Train the linear reference model and capture speed, clarity, and benchmark performance.", tags:["Logistic","Baseline","Coefficients","Reference"]},
+          {day:"Day 12", title:"Decision Tree", detail:"Train a controlled rule-based model for transparent path comparison.", tags:["Decision Tree","Rules","Pruning","Benchmark"]}
         ],
+        checklist:["Logistic model complete","Decision Tree complete","Baseline results logged"],
         deliverables:["Baseline scorecards","Initial metric table","Transparent comparison pack"]
       },
       {
         id:7,
-        days:"Phase 7",
+        days:"Day 13–15",
         title:"XGBoost optimization",
         summary:"Train the primary model, tune hyperparameters, and validate gains from the full pipeline.",
         daysList:[
-          {day:"Task 13", title:"Primary XGBoost build", detail:"Train XGBoost with imbalance-aware settings and stable configuration.", tags:["XGBoost","Boosting","Primary Engine","Stability"], issue: 13, deadline: "May 2"},
-          {day:"Task 14", title:"Bayesian optimization", detail:"Tune depth, learning rate, regularization, subsampling, and estimator count.", tags:["Bayesian","Hyperopt","Tuning","Search"], issue: 14, deadline: "May 3"},
-          {day:"Task 15", title:"Validation review", detail:"Run structured comparisons and evaluate gains from feature work and imbalance remediation.", tags:["Validation","Ablation","Cross-check","Improvement"], issue: 15, deadline: "May 4"}
+          {day:"Day 13", title:"Primary XGBoost build", detail:"Train XGBoost with imbalance-aware settings and stable configuration.", tags:["XGBoost","Boosting","Primary Engine","Stability"]},
+          {day:"Day 14", title:"Bayesian optimization", detail:"Tune depth, learning rate, regularization, subsampling, and estimator count.", tags:["Bayesian","Hyperopt","Tuning","Search"]},
+          {day:"Day 15", title:"Validation review", detail:"Run structured comparisons and evaluate gains from feature work and imbalance remediation.", tags:["Validation","Ablation","Cross-check","Improvement"]}
         ],
+        checklist:["XGBoost complete","Optimization complete","Validation complete"],
         deliverables:["Optimized XGBoost","Tuning summary","Improvement evidence"]
       },
       {
         id:8,
-        days:"Phase 8",
+        days:"Day 16–17",
         title:"Explainability integration",
         summary:"Integrate SHAP for global and local explanation with optional LIME comparison.",
         daysList:[
-          {day:"Task 16", title:"Global explanation", detail:"Generate feature importance and portfolio-level explanation views.", tags:["SHAP","Global Importance","Drivers","Portfolio"], issue: 16, deadline: "May 5"},
-          {day:"Task 17", title:"Local explanation", detail:"Create waterfall views, case-level insights, and optional LIME comparison.", tags:["Waterfall","Force Views","Counterfactual","LIME"], issue: 17, deadline: "May 6"}
+          {day:"Day 16", title:"Global explanation", detail:"Generate feature importance and portfolio-level explanation views.", tags:["SHAP","Global Importance","Drivers","Portfolio"]},
+          {day:"Day 17", title:"Local explanation", detail:"Create waterfall views, case-level insights, and optional LIME comparison.", tags:["Waterfall","Force Views","Counterfactual","LIME"]}
         ],
+        checklist:["SHAP integration complete","Explanation visuals generated","Local analysis reviewed"],
         deliverables:["Explainability pack","Feature ranking","Case-level explanation set"]
       },
       {
         id:9,
-        days:"Phase 9",
+        days:"Day 18–19",
         title:"Metrics, fairness, and governance",
         summary:"Evaluate performance, calibration, explanation quality, fairness checks, and regulatory alignment.",
         daysList:[
-          {day:"Task 18", title:"Metric review", detail:"Measure AUC ROC, Precision, Recall, F1 Score, MCC, and Brier Score.", tags:["AUC ROC","Precision","Recall","Calibration"], issue: 18, deadline: "May 7"},
-          {day:"Task 19", title:"Governance review", detail:"Assess fairness exposure, explanation quality, and alignment with GDPR, ECOA, and FHA.", tags:["Fairness","GDPR","ECOA","FHA"], issue: 19, deadline: "May 8"}
+          {day:"Day 18", title:"Metric review", detail:"Measure AUC ROC, Precision, Recall, F1 Score, MCC, and Brier Score.", tags:["AUC ROC","Precision","Recall","Calibration"]},
+          {day:"Day 19", title:"Governance review", detail:"Assess fairness exposure, explanation quality, and alignment with GDPR, ECOA, and FHA.", tags:["Fairness","GDPR","ECOA","FHA"]}
         ],
+        checklist:["Metrics complete","Fairness review complete","Governance notes complete"],
         deliverables:["Evaluation dashboard","Governance summary","Compliance mapping"]
       },
       {
         id:10,
-        days:"Phase 10",
+        days:"Day 20",
         title:"Final executive package",
         summary:"Compile the complete delivery package and enable clean export for review and print.",
         daysList:[
-          {day:"Task 20", title:"Final package generation", detail:"Create the final executive report, summary views, and presentation-ready output.", tags:["Executive Report","Delivery","Print","Packaging"], issue: 20, deadline: "May 9"}
+          {day:"Day 20", title:"Final package generation", detail:"Create the final executive report, summary views, and presentation-ready output.", tags:["Executive Report","Delivery","Print","Packaging"]}
         ],
+        checklist:["Final report generated","Sections reviewed","Export ready"],
         deliverables:["Final Executive Report","Delivery bundle","Print-ready package"]
       }
     ];
 
-    const stateKey = "evoastra_live_project_v3";
-    const reportKey = "evoastra_report_generated_v3";
+    const stateKey = "evoastra_live_project_v2";
+    const reportKey = "evoastra_report_generated_v2";
     let state = loadState();
 
     function loadState(){
@@ -2250,9 +2256,7 @@
         base[p.id] = {
           open: p.id === 1,
           notes: "",
-          checks: p.daysList.map(()=>false),
-          pillClasses: p.daysList.map(()=>"status-ready"),
-          pillTexts: p.daysList.map(()=>"Ready")
+          checks: p.checklist.map(()=>false)
         };
       });
       return base;
@@ -2320,20 +2324,28 @@
             <div class="phase-content">
               <div>
                 <div class="day-grid">
-                  ${phase.daysList.map((day, idx)=>`
+                  ${phase.daysList.map(day=>`
                     <div class="day-card">
-                      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap: 10px;">
-                        <h4>${day.day} • ${day.title}</h4>
-                        <span class="status-pill ${phaseState.pillClasses[idx]}" id="issue-pill-${day.issue}">${phaseState.pillTexts[idx]}</span>
-                      </div>
-                      <div class="deadline" style="margin-top: 6px; margin-bottom: 8px;">🗓️ Due: ${day.deadline}</div>
-                      <p style="margin-top:0">${day.detail}</p>
+                      <h4>${day.day} • ${day.title}</h4>
+                      <p style="margin-top:8px">${day.detail}</p>
                       <div class="tags">${day.tags.map(tag=>`<span class="tag">${tag}</span>`).join("")}</div>
                     </div>
                   `).join("")}
                 </div>
               </div>
               <div>
+                <div class="checkpoint">
+                  <h4>Checkpoint System</h4>
+                  <div class="check-list">
+                    ${phase.checklist.map((item, idx)=>`
+                      <label class="check">
+                        <input type="checkbox" data-check="${phase.id}" data-idx="${idx}" ${phaseState.checks[idx] ? "checked" : ""}>
+                        <span>${item}</span>
+                      </label>
+                    `).join("")}
+                  </div>
+                </div>
+
                 <div class="checkpoint" style="margin-top:14px">
                   <h4>Expected outputs</h4>
                   <ul class="feature-list">
@@ -2371,6 +2383,17 @@
           state[id].open = !state[id].open;
           saveState();
           renderPhases();
+        });
+      });
+
+      document.querySelectorAll("[data-check]").forEach(input=>{
+        input.addEventListener("change", ()=>{
+          const phaseId = Number(input.dataset.check);
+          const idx = Number(input.dataset.idx);
+          state[phaseId].checks[idx] = input.checked;
+          saveState();
+          renderPhases();
+          if(totals().percent === 100) blastConfetti();
         });
       });
 
@@ -2455,8 +2478,6 @@
       document.getElementById("completeAll").addEventListener("click", ()=>{
         phaseData.forEach(p=>{
           state[p.id].checks = state[p.id].checks.map(()=>true);
-          state[p.id].pillClasses = state[p.id].pillClasses.map(()=>"status-done");
-          state[p.id].pillTexts = state[p.id].pillTexts.map(()=>"Done");
           state[p.id].open = true;
         });
         saveState();
@@ -2482,11 +2503,11 @@
       const reportOutput = document.getElementById("reportOutput");
       reportOutput.classList.add("active");
 
-      const summary = `This research project delivers an explainable credit default prediction framework built around XGBoost and SHAP, supported by transparent benchmark models and a structured 20-day execution roadmap. Current completion stands at ${pct}% across ${t.complete} of ${t.total} tracked tasks. The project combines two public credit datasets, robust preprocessing, class imbalance handling, explainability analysis, fairness-aware review, and reproducible delivery practices to support regulatory-compliant lending decisions.`;
+      const summary = `This research project delivers an explainable credit default prediction framework built around XGBoost and SHAP, supported by transparent benchmark models and a structured 20-day execution roadmap. Current completion stands at ${pct}% across ${t.complete} of ${t.total} tracked checkpoints. The project combines two public credit datasets, robust preprocessing, class imbalance handling, explainability analysis, fairness-aware review, and reproducible delivery practices to support regulatory-compliant lending decisions.`;
 
       document.getElementById("reportSummary").textContent = summary;
       document.getElementById("line1").textContent = "[INIT] EVOASTRA execution layer online.";
-      document.getElementById("line2").textContent = `[SYNC] ${t.complete}/${t.total} tasks synchronized.`;
+      document.getElementById("line2").textContent = `[SYNC] ${t.complete}/${t.total} checkpoints synchronized.`;
       document.getElementById("line3").textContent = "[READY] Final executive package generated.";
       document.getElementById("line4").textContent = `[STATUS] Delivery completion: ${pct}%.`;
       localStorage.setItem(reportKey, "1");
@@ -2633,208 +2654,174 @@
     function cursorGlow(){
       const glow = document.querySelector(".cursor-glow");
       window.addEventListener("pointermove", e=>{
-        glow.style.left = `${e.clientX}px`;
-        glow.style.top = `${e.clientY}px`;
-      });
-    }
-
-    function particleField(){
-      const canvas = document.querySelector(".particles");
-      const ctx = canvas.getContext("2d");
-      let w, h, particles;
-
-      function resize(){
-        w = canvas.width = window.innerWidth;
-        h = canvas.height = window.innerHeight;
-        particles = Array.from({length: Math.min(90, Math.floor(w / 18))}, () => ({
-          x: Math.random() * w,
-          y: Math.random() * h,
-          r: Math.random() * 2 + .6,
-          vx: (Math.random() - .5) * .35,
-          vy: (Math.random() - .5) * .35,
-          a: Math.random() * .5 + .15
-        }));
-      }
-
-      function draw(){
-        ctx.clearRect(0,0,w,h);
-        particles.forEach(p=>{
-          p.x += p.vx;
-          p.y += p.vy;
-          if(p.x < 0 || p.x > w) p.vx *= -1;
-          if(p.y < 0 || p.y > h) p.vy *= -1;
-          ctx.beginPath();
-          ctx.fillStyle = `rgba(0,245,255,${p.a})`;
-          ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-          ctx.fill();
+        glow.style.left =
+          glow.style.left = `${e.clientX}px`;
+          glow.style.top = `${e.clientY}px`;
         });
-        requestAnimationFrame(draw);
       }
 
-      window.addEventListener("resize", resize);
-      resize();
-      draw();
-    }
+      function particleField(){
+        const canvas = document.querySelector(".particles");
+        const ctx = canvas.getContext("2d");
+        let w, h, particles;
 
-    function networkField(){
-      const canvas = document.querySelector(".network");
-      const ctx = canvas.getContext("2d");
-      let w, h, nodes;
-
-      function resize(){
-        w = canvas.width = window.innerWidth;
-        h = canvas.height = window.innerHeight;
-        nodes = Array.from({length: Math.min(34, Math.floor(w / 45))}, () => ({
-          x: Math.random() * w,
-          y: Math.random() * h,
-          vx: (Math.random() - .5) * .28,
-          vy: (Math.random() - .5) * .28
-        }));
-      }
-
-      function draw(){
-        ctx.clearRect(0,0,w,h);
-        for(let i=0;i<nodes.length;i++){
-          const a = nodes[i];
-          a.x += a.vx;
-          a.y += a.vy;
-          if(a.x < 0 || a.x > w) a.vx *= -1;
-          if(a.y < 0 || a.y > h) a.vy *= -1;
-
-          for(let j=i+1;j<nodes.length;j++){
-            const b = nodes[j];
-            const dx = a.x - b.x;
-            const dy = a.y - b.y;
-            const d = Math.sqrt(dx*dx + dy*dy);
-            if(d < 160){
-              ctx.beginPath();
-              ctx.strokeStyle = `rgba(123,97,255,${(1 - d/160) * 0.18})`;
-              ctx.lineWidth = 1;
-              ctx.moveTo(a.x,a.y);
-              ctx.lineTo(b.x,b.y);
-              ctx.stroke();
-            }
-          }
+        function resize(){
+          w = canvas.width = window.innerWidth;
+          h = canvas.height = window.innerHeight;
+          particles = Array.from({length: Math.min(90, Math.floor(w / 18))}, () => ({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            r: Math.random() * 2 + .6,
+            vx: (Math.random() - .5) * .35,
+            vy: (Math.random() - .5) * .35,
+            a: Math.random() * .5 + .15
+          }));
         }
-        requestAnimationFrame(draw);
-      }
 
-      window.addEventListener("resize", resize);
-      resize();
-      draw();
-    }
-
-    function blastConfetti(){
-      const colors = ["#00F5FF","#7B61FF","#14F195","#FFC857","#FFFFFF"];
-      for(let i=0;i<120;i++){
-        const piece = document.createElement("span");
-        piece.className = "confetti";
-        piece.style.left = `${Math.random() * 100}vw`;
-        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
-        piece.style.animationDuration = `${Math.random() * 2 + 2.5}s`;
-        piece.style.opacity = `${Math.random() * .5 + .5}`;
-        piece.style.transform = `rotate(${Math.random() * 360}deg)`;
-        document.body.appendChild(piece);
-        setTimeout(()=>piece.remove(), 5200);
-      }
-    }
-
-    function restoreReportIfNeeded(){
-      if(localStorage.getItem(reportKey) === "1"){
-        document.getElementById("reportOutput").classList.add("active");
-        const t = totals();
-        document.getElementById("reportSummary").textContent =
-          `This research project delivers an explainable credit default prediction framework built around XGBoost and SHAP, supported by transparent benchmark models and a structured 20-day execution roadmap. Current completion stands at ${t.percent}% across ${t.complete} of ${t.total} tracked tasks. The project combines two public credit datasets, robust preprocessing, class imbalance handling, explainability analysis, fairness-aware review, and reproducible delivery practices to support regulatory-compliant lending decisions.`;
-        document.getElementById("line3").textContent = "[READY] Final executive package generated.";
-        document.getElementById("line4").textContent = `[STATUS] Delivery completion: ${t.percent}%.`;
-      }
-    }
-
-    async function fetchGroupActivity() {
-      const repo = "santoshshresth/Amex"; 
-      const consoleBox = document.getElementById("activityConsole");
-      
-      try {
-        const response = await fetch(`https://api.github.com/repos/${repo}/commits`);
-        if (!response.ok) return;
-        const commits = await response.json();
-        
-        let newHTML = '<div class="console-line">[INIT] EVOASTRA execution layer online.</div>';
-        
-        for(let i=0; i<Math.min(10, commits.length); i++) {
-          const author = commits[i].commit.author.name;
-          const msg = commits[i].commit.message;
-          const date = new Date(commits[i].commit.author.date).toLocaleDateString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
-          newHTML += `<div class="console-line">[${date}] ${author.toUpperCase()} SUBMITTED: ${msg}</div>`;
+        function draw(){
+          ctx.clearRect(0,0,w,h);
+          particles.forEach(p=>{
+            p.x += p.vx;
+            p.y += p.vy;
+            if(p.x < 0 || p.x > w) p.vx *= -1;
+            if(p.y < 0 || p.y > h) p.vy *= -1;
+            ctx.beginPath();
+            ctx.fillStyle = `rgba(0,245,255,${p.a})`;
+            ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+            ctx.fill();
+          });
+          requestAnimationFrame(draw);
         }
-        
-        consoleBox.innerHTML = newHTML;
-      } catch(e) {
-        consoleBox.innerHTML += `<div class="console-line" style="color: #FF5E7A;">[ERROR] Could not fetch GitHub activity. Check connection.</div>`;
+
+        window.addEventListener("resize", resize);
+        resize();
+        draw();
       }
-    }
 
-    // --- NEW: GITHUB ISSUES TASK TRACKER ---
-    async function fetchTaskStatus() {
-      const repo = "santoshshresth/Amex"; 
-      try {
-        const response = await fetch(`https://api.github.com/repos/${repo}/issues?state=all`);
-        if (!response.ok) return; 
-        const issues = await response.json();
-        
-        phaseData.forEach((phase) => {
-          phase.daysList.forEach((day, idx) => {
-            const githubIssue = issues.find(i => i.number == day.issue);
-            if (githubIssue) {
-              const isReview = githubIssue.labels.some(label => label.name === 'needs-review');
+      function networkField(){
+        const canvas = document.querySelector(".network");
+        const ctx = canvas.getContext("2d");
+        let w, h, nodes;
 
-              if (githubIssue.state === 'closed') {
-                state[phase.id].pillClasses[idx] = 'status-done';
-                state[phase.id].pillTexts[idx] = 'Done';
-                state[phase.id].checks[idx] = true;
-              } else if (isReview) {
-                state[phase.id].pillClasses[idx] = 'status-review';
-                state[phase.id].pillTexts[idx] = 'In Review';
-                state[phase.id].checks[idx] = false;
-              } else {
-                state[phase.id].pillClasses[idx] = 'status-progress';
-                state[phase.id].pillTexts[idx] = 'In Progress';
-                state[phase.id].checks[idx] = false;
+        function resize(){
+          w = canvas.width = window.innerWidth;
+          h = canvas.height = window.innerHeight;
+          nodes = Array.from({length: Math.min(34, Math.floor(w / 45))}, () => ({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            vx: (Math.random() - .5) * .28,
+            vy: (Math.random() - .5) * .28
+          }));
+        }
+
+        function draw(){
+          ctx.clearRect(0,0,w,h);
+          for(let i=0;i<nodes.length;i++){
+            const a = nodes[i];
+            a.x += a.vx;
+            a.y += a.vy;
+            if(a.x < 0 || a.x > w) a.vx *= -1;
+            if(a.y < 0 || a.y > h) a.vy *= -1;
+
+            for(let j=i+1;j<nodes.length;j++){
+              const b = nodes[j];
+              const dx = a.x - b.x;
+              const dy = a.y - b.y;
+              const d = Math.sqrt(dx*dx + dy*dy);
+              if(d < 160){
+                ctx.beginPath();
+                ctx.strokeStyle = `rgba(123,97,255,${(1 - d/160) * 0.18})`;
+                ctx.lineWidth = 1;
+                ctx.moveTo(a.x,a.y);
+                ctx.lineTo(b.x,b.y);
+                ctx.stroke();
               }
             }
-          });
-        });
+          }
+          requestAnimationFrame(draw);
+        }
 
-        // Save the updated statuses to local state and update UI
-        saveState();
-        renderPhases();
-      } catch(e) {
-        console.log("Error fetching task status from GitHub:", e);
+        window.addEventListener("resize", resize);
+        resize();
+        draw();
       }
-    }
 
-    function init(){
-      renderPhases();
-      bindNavigation();
-      bindGlobalActions();
-      bindSidebar();
-      datasetSlider();
-      animateCounters();
-      animateGauges();
-      typeTitle();
-      observeReveal();
-      startClock();
-      bindRipple();
-      bindMagnetic();
-      cursorGlow();
-      particleField();
-      networkField();
-      restoreReportIfNeeded();
-      fetchGroupActivity();
-      fetchTaskStatus();
-    }
+      function blastConfetti(){
+        const colors = ["#00F5FF","#7B61FF","#14F195","#FFC857","#FFFFFF"];
+        for(let i=0;i<120;i++){
+          const piece = document.createElement("span");
+          piece.className = "confetti";
+          piece.style.left = `${Math.random() * 100}vw`;
+          piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+          piece.style.animationDuration = `${Math.random() * 2 + 2.5}s`;
+          piece.style.opacity = `${Math.random() * .5 + .5}`;
+          piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+          document.body.appendChild(piece);
+          setTimeout(()=>piece.remove(), 5200);
+        }
+      }
 
-    init();
-  </script>
-</body>
+      function restoreReportIfNeeded(){
+        if(localStorage.getItem(reportKey) === "1"){
+          document.getElementById("reportOutput").classList.add("active");
+          const t = totals();
+          document.getElementById("reportSummary").textContent =
+            `This research project delivers an explainable credit default prediction framework built around XGBoost and SHAP, supported by transparent benchmark models and a structured 20-day execution roadmap. Current completion stands at ${t.percent}% across ${t.complete} of ${t.total} tracked checkpoints. The project combines two public credit datasets, robust preprocessing, class imbalance handling, explainability analysis, fairness-aware review, and reproducible delivery practices to support regulatory-compliant lending decisions.`;
+          document.getElementById("line3").textContent = "[READY] Final executive package generated.";
+          document.getElementById("line4").textContent = `[STATUS] Delivery completion: ${t.percent}%.`;
+        }
+      }
+
+      async function fetchGroupActivity() {
+      // Points exactly to your GitHub repository
+        const repo = "santoshshresth/Amex"; 
+        const consoleBox = document.getElementById("activityConsole");
+        
+        try {
+          const response = await fetch(`https://api.github.com/repos/${repo}/commits`);
+          const commits = await response.json();
+          
+          // Start with the init line
+          let newHTML = '<div class="console-line">[INIT] EVOASTRA execution layer online.</div>';
+          
+          // Loop through the last 10 commits
+          for(let i=0; i<Math.min(10, commits.length); i++) {
+            const author = commits[i].commit.author.name;
+            const msg = commits[i].commit.message;
+            // Format date and time
+            const date = new Date(commits[i].commit.author.date).toLocaleDateString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+            
+            newHTML += `<div class="console-line">[${date}] ${author.toUpperCase()} SUBMITTED: ${msg}</div>`;
+          }
+          
+          // Inject the live data into the console
+          consoleBox.innerHTML = newHTML;
+        } catch(e) {
+          consoleBox.innerHTML += `<div class="console-line" style="color: #FF5E7A;">[ERROR] Could not fetch GitHub activity. Check connection.</div>`;
+        }
+      }
+
+      function init(){
+        renderPhases();
+        bindNavigation();
+        bindGlobalActions();
+        bindSidebar();
+        datasetSlider();
+        animateCounters();
+        animateGauges();
+        typeTitle();
+        observeReveal();
+        startClock();
+        bindRipple();
+        bindMagnetic();
+        cursorGlow();
+        particleField();
+        networkField();
+        restoreReportIfNeeded();
+        fetchGroupActivity();
+      }
+
+      init();
+    </script>
+  </body>
 </html>
