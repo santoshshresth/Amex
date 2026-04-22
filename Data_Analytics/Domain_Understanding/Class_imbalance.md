@@ -69,8 +69,8 @@ The competition itself emphasizes:
 
 ---
 
-## 8. Guidance for Team
-
+## 8. Guidance for Team (Data Engineering & Model Evaluation Team)
+  
 - Do NOT rely on accuracy
 - Monitor recall for default class
 - Use weighted or imbalance-aware models
