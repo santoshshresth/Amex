@@ -1,108 +1,111 @@
-# Domain Understanding: Credit Risk & Scoring
+# Domain Understanding: Credit Risk in AMEX Default Prediction
 
 ## 1. Problem Overview
 
-This project focuses on building a predictive system for **credit risk assessment**, a core component of financial decision-making within lending institutions.
+This project is based on the American Express Default Prediction dataset, where the objective is to predict whether a customer will default in the future.
 
-At its core, the objective is to estimate the likelihood that a customer will **default on a financial obligation**. This probability is commonly referred to as the *Probability of Default (PD)*.
+The target variable:
+- `default = 1` → Customer will default
+- `default = 0` → Customer will not default
 
-The output of such systems directly influences:
-- Loan approval/rejection decisions
-- Credit limits
-- Interest rates (risk-based pricing)
-
----
-
-## 2. What is Credit Scoring?
-
-Credit scoring is a statistical and machine learning-driven process used to evaluate the creditworthiness of individuals.
-
-It involves:
-- Input: Customer financial and behavioral data
-- Processing: Risk model (statistical or ML-based)
-- Output: A score or probability indicating default risk
+The goal is to estimate the **Probability of Default (PD)** for each customer.
 
 ---
 
-## 3. Key Risk Indicators
+## 2. Nature of the Dataset
 
-Typical variables used in credit risk modeling include:
+Unlike traditional tabular datasets, this dataset contains:
 
-### Financial Attributes
-- Income level
-- Debt-to-income ratio
-- Credit utilization
+- **Time-series behavioral data**
+- Multiple records per customer (`customer_ID`)
+- Monthly snapshots of financial activity
 
-### Behavioral Attributes
-- Payment history
-- Delinquencies
-- Account age
-
-### External Indicators
-- Bureau scores
-- Previous defaults
+This means:
+- Customer behavior over time is more important than single-point values
+- Trends (e.g., worsening payment behavior) are critical
 
 ---
 
-## 4. Business Impact of Predictions
+## 3. Feature Categories
 
-The effectiveness of a credit scoring model is not measured solely by accuracy, but by **business outcomes**.
+The dataset contains anonymized features grouped as:
 
-### False Positives (Type I Error)
-- Predicting a customer will default when they would not
-- Impact: Lost business opportunity and reduced revenue
+### Delinquency Variables (D)
+- Capture late payments or missed obligations
+- Strong indicators of financial stress
 
-### False Negatives (Type II Error)
-- Predicting a customer will not default when they actually do
-- Impact: Financial loss due to default
+### Balance Variables (B)
+- Represent outstanding balances or utilization
+- High values may indicate over-leverage
 
-> In most financial contexts, **false negatives are more costly** than false positives.
+### Payment Variables (P)
+- Reflect repayment behavior
+- Consistency and trends matter
 
----
+### Spending Variables (S)
+- Represent transaction or usage patterns
 
-## 5. Decision Framework
-
-Credit decisions typically follow:
-
-1. Data Collection
-2. Feature Engineering (handled by other team members)
-3. Risk Modeling
-4. Score Generation
-5. Threshold-based Decisioning
+### Risk Variables (R)
+- Engineered risk indicators
 
 ---
 
-## 6. Role of This Project
+## 4. Business Interpretation
 
-This project simulates a real-world credit risk pipeline where:
+The model simulates a real-world credit decision system:
 
-- The dataset represents historical customer behavior
-- The target variable represents default/non-default
-- The goal is to build a model aligned with:
-  - Business risk priorities
-  - Regulatory expectations
-  - Interpretability requirements
+- Input: Customer historical financial behavior
+- Output: Risk score (probability of default)
+- Decision: Approve, reject, or adjust credit terms
 
 ---
 
-## 7. Key Considerations for the Team "Data & Feature Engineering".
+## 5. Temporal Behavior Matters
 
---This step is not for our team. This is for Data & Feature Engineering Team.
+Since data is sequential:
+- Increasing delinquency over time → higher risk
+- Decreasing payment amounts → warning signal
+- Volatility in balances → instability
 
-All downstream work (modeling, evaluation, etc.) must consider:
-
-- Imbalanced nature of credit data
-- Importance of recall for default cases
-- Need for explainable predictions
-- Business cost of errors
+> Models should consider **customer-level aggregation or sequence patterns**.
 
 ---
 
-## 8. Summary
+## 6. Business Cost of Errors
 
-This is not just a classification problem. It is a **risk management system** where:
-- Predictions influence financial decisions
-- Errors carry real monetary consequences
-- Transparency is mandatory
+### False Negatives (Critical)
+- Predicting "non-default" for a risky customer
+- Leads to financial loss
 
-The domain understanding should guide all technical implementations in this project.
+### False Positives
+- Rejecting a good customer
+- Leads to lost revenue
+
+> In this dataset, **detecting defaulters is the priority**.
+
+---
+
+## 7. Key Challenges in This Dataset
+
+- Severe class imbalance (~3–4% defaults)
+- High dimensionality (hundreds of features)
+- Time-series structure
+- Anonymized features (limited domain labeling)
+
+---
+
+## 8. Guidance for Modeling Team
+
+- Aggregate features at customer level (mean, max, trend)
+- Capture temporal patterns where possible
+- Focus on delinquency and payment signals
+- Avoid relying purely on static snapshots
+
+---
+
+## 9. Summary
+
+This dataset represents a **real-world credit risk system** where:
+- Behavior over time defines risk
+- Rare default events carry high importance
+- Models must balance predictive power with interpretability
