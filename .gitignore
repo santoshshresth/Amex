@@ -42,3 +42,8 @@ data/raw/*
 !data/raw/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
+
+# Ignore all data files (CSVs, Zips, Parquets)
+*.csv
+*.zip
+*.parquet
