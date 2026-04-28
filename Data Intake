@@ -1,0 +1,170 @@
+import pandas as pd
+df = pd.read_csv("/content/cs-training.csv")
+df.head()
+
+import os
+import pandas as pd
+
+class DataValidator:
+    def __init__(self, file_path, expected_columns=None, target_column=None):
+        self.file_path = file_path
+        self.expected_columns = expected_columns
+        self.target_column = target_column
+        self.df = None
+
+    def validate_file_exists(self):
+        if not os.path.exists(self.file_path):
+            raise FileNotFoundError(f"File not found: {self.file_path}")
+        print(" File exists")
+
+    def load_data(self):
+        try:
+            self.df = pd.read_csv("/content/cs-training.csv")
+            print(" Data loaded successfully")
+        except Exception as e:
+            raise Exception(f" Error loading file: {e}")
+
+    # Validate shape
+    def validate_shape(self, min_rows=1, min_cols=1):
+        rows, cols = self.df.shape
+        print(f" Shape: {rows} rows, {cols} columns")
+
+        if rows < min_rows or cols < min_cols:
+            raise ValueError(" Dataset shape is smaller than expected")
+        print(" Shape validation passed")
+
+    def validate_columns(self):
+        if self.expected_columns:
+            missing = set(self.expected_columns) - set(self.df.columns)
+            extra = set(self.df.columns) - set(self.expected_columns)
+
+            if missing:
+                raise ValueError(f" Missing columns: {missing}")
+            print(" All expected columns present")
+
+            if extra:
+                print(f" Extra columns found: {extra}")
+
+    # Validate target column
+    def validate_target(self):
+        if self.target_column:
+            if self.target_column not in self.df.columns:
+                raise ValueError(f" Target column '{self.target_column}' not found")
+            print(" Target column exists")
+
+    # Missing values check
+    def check_missing_values(self):
+        missing = self.df.isnull().sum()
+        missing = missing[missing > 0]
+
+        if not missing.empty:
+            print(" Missing values found:")
+            print(missing)
+        else:
+            print(" No missing values")
+
+    def check_duplicates(self):
+        duplicates = self.df.duplicated().sum()
+        if duplicates > 0:
+            print(f" Found {duplicates} duplicate rows")
+        else:
+            print(" No duplicates found")
+
+    def validate_dtypes(self, expected_dtypes: dict):
+        for col, dtype in expected_dtypes.items():
+            if col in self.df.columns:
+                if self.df[col].dtype != dtype:
+                    print(f" Column {col} expected {dtype}, found {self.df[col].dtype}")
+                else:
+                    print(f" {col} dtype correct")
+
+    def integrity_checks(self):
+        numeric_cols = self.df.select_dtypes(include=['number']).columns
+        for col in numeric_cols:
+            if (self.df[col] < 0).any():
+                print(f" Negative values found in {col}")
+
+        if 'id' in self.df.columns:
+            if self.df['id'].nunique() != len(self.df):
+                print(" ID column is not unique")
+            else:
+                print(" ID column is unique")
+
+    # Run all validations
+    def run_all_checks(self):
+        self.validate_file_exists()
+        self.load_data()
+        self.validate_shape()
+        self.validate_columns()
+        self.validate_target()
+        self.check_missing_values()
+        self.check_duplicates()
+        self.integrity_checks()
+
+        print("\n Data validation completed successfully!")
+
+
+
+if __name__ == "__main__":
+    file_path = "cs-training.csv"
+
+    expected_columns = [
+        "SeriousDlqin2yrs",
+        "RevolvingUtilizationOfUnsecuredLines",
+        "age",
+        "NumberOfTime30-59DaysPastDueNotWorse"
+    ]
+
+    expected_dtypes = {
+        "age": "int64",
+        "SeriousDlqin2yrs": "int64"
+    }
+
+    validator = DataValidator(
+        file_path=file_path,
+        expected_columns=expected_columns,
+        target_column="SeriousDlqin2yrs"
+    )
+
+    validator.run_all_checks()
+    validator.validate_dtypes(expected_dtypes)
+
+import pandas as pd
+import os
+
+def validate_and_save(input_path, output_path):
+    if not os.path.exists(input_path):
+        raise FileNotFoundError(f"File not found: {input_path}")
+
+    df = pd.read_csv(input_path)
+
+    initial_rows = len(df)
+
+    df = df.drop_duplicates()
+
+    if "SeriousDlqin2yrs" in df.columns:
+        df = df.dropna(subset=["SeriousDlqin2yrs"])
+
+    numeric_cols = df.select_dtypes(include=['number']).columns
+    for col in numeric_cols:
+        df = df[df[col] >= 0]
+
+    if "age" in df.columns:
+        df = df[(df["age"] > 0) & (df["age"] < 100)]
+
+    final_rows = len(df)
+
+    print(f" Rows before: {initial_rows}")
+    print(f" Rows after validation: {final_rows}")
+
+    df.to_csv(output_path, index=False)
+    print(f" Validated file saved at: {output_path}")
+
+
+input_file = "cs-training.csv"
+output_file = "validated_cs_training.csv"
+
+validate_and_save(input_file, output_file)
+
+from google.colab import files
+files.download("validated_cs_training.csv")
