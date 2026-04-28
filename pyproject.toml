@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "explainable-credit-default-prediction"
+version = "0.1.0"
+description = "Explainable credit default prediction with XGBoost and SHAP"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Evoastra Innovation Systems" }]
+dependencies = [
+  "numpy>=1.26",
+  "pandas>=2.2",
+  "scikit-learn>=1.5",
+  "xgboost>=2.1",
+  "shap>=0.46",
+  "imbalanced-learn>=0.12",
+  "optuna>=3.6",
+  "matplotlib>=3.9",
+  "seaborn>=0.13",
+  "scipy>=1.13",
+  "joblib>=1.4",
+  "pyarrow>=16.1",
+  "openpyxl>=3.1"
+]
+
+[project.optional-dependencies]
+dev = [
+  "black>=24.4",
+  "mypy>=1.10",
+  "pytest>=8.2",
+  "ruff>=0.5"
+]
+
+[project.scripts]
+credit-default = "credit_default_prediction.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
