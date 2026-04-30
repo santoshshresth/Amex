@@ -31,7 +31,6 @@ Thumbs.db
 # Project outputs
 logs/*
 !logs/.gitkeep
-models/*
 !models/.gitkeep
 reports/*
 !reports/.gitkeep
