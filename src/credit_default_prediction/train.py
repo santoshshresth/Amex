@@ -95,17 +95,14 @@ def train_models(X_train, y_train, scale_pos_weight):
 
     models["Logistic"] = LogisticRegression(class_weight='balanced', max_iter=1000)
     models["RandomForest"] = RandomForestClassifier(
-        n_estimators=200, max_depth=8, class_weight='balanced', random_state=42, n_jobs=-1
+        n_estimators=100,random_state=42
     )
     models["XGBoost"] = XGBClassifier(
-        n_estimators=500, learning_rate=0.05, max_depth=5,
-        scale_pos_weight=scale_pos_weight, eval_metric='logloss',
-        use_label_encoder=False, random_state=42
+        n_estimators=100, random_state=42
     )
     models["LightGBM"] = LGBMClassifier(
-        n_estimators=500, learning_rate=0.05, max_depth=5,
-        num_leaves=31, scale_pos_weight=scale_pos_weight, random_state=42
-    )
+        n_estimators=500, random_state=42
+        )
 
     # Train all
     for name, model in models.items():
